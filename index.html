@@ -1,0 +1,677 @@
+<title>Registre Génération 10</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Planificateur d'élevage Dofus 3.7 : dragodindes, muldos et volkornes jusqu'aux succès de génération 10.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@700;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout : un parcours en 4 étapes numérotées sur une seule colonne, la prochaine action toujours mise en avant. */
+:root {
+  --bg: #eef0e8;
+  --surface: #f9faf5;
+  --sunken: #e3e6db;
+  --ink: #1f2a22;
+  --muted: #5d6a5f;
+  --line: #cdd3c4;
+  --accent: #9a5b12;
+  --accent-ink: #ffffff;
+  --accent-soft: #f1dfc2;
+  --good: #2f7a4a;
+  --good-soft: #d6ead9;
+  --font-display: "Alegreya", Georgia, "Times New Roman", serif;
+  --font-body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --radius: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141b16; --surface: #1b241e; --sunken: #111712; --ink: #e4e9df; --muted: #9aa79b;
+    --line: #2f3b32; --accent: #e3a548; --accent-ink: #1b1408; --accent-soft: #3a2c16; --good: #6cc48b; --good-soft: #1c3324;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141b16; --surface: #1b241e; --sunken: #111712; --ink: #e4e9df; --muted: #9aa79b;
+  --line: #2f3b32; --accent: #e3a548; --accent-ink: #1b1408; --accent-soft: #3a2c16; --good: #6cc48b; --good-soft: #1c3324;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+}
+.wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 36px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(2.1rem, 5vw, 3rem); font-weight: 800; }
+h2 { font-size: 1.55rem; font-weight: 800; }
+h3 { font-size: 1.15rem; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); }
+.eyebrow { font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 700; }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: .88rem; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header.top { display: grid; gap: 8px; max-width: 64ch; }
+header.top p { color: var(--muted); font-size: 1.05rem; }
+
+/* Étapes */
+.step { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 16px; }
+.step > .n {
+  width: 44px; height: 44px; border-radius: 50%; background: var(--ink); color: var(--bg);
+  display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 1.3rem;
+}
+.step > .body { display: grid; gap: 16px; min-width: 0; }
+.step-head { display: grid; gap: 4px; padding-top: 6px; }
+.step-head p { color: var(--muted); max-width: 68ch; }
+@media (max-width: 560px) {
+  .step { grid-template-columns: minmax(0, 1fr); }
+  .step > .n { width: 36px; height: 36px; font-size: 1.1rem; }
+}
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 14px; }
+.row { display: flex; gap: 8px 12px; align-items: center; flex-wrap: wrap; }
+
+.btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 700;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.small { padding: 4px 10px; font-size: .85rem; }
+.linkish { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+/* 1. Familles */
+.families { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .families { grid-template-columns: minmax(0, 1fr); } }
+.fam {
+  border: 2px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 14px 16px; cursor: pointer;
+  display: grid; gap: 8px; text-align: left;
+}
+.fam .t { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; }
+.fam[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.bar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.bar.good i { background: var(--good); }
+
+/* 2. Progression */
+.ladder { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 760px) { .ladder { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .ladder { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.rung {
+  border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; cursor: pointer;
+  display: grid; gap: 4px; text-align: left;
+}
+.rung .g { font-weight: 700; }
+.rung .c { font-size: .8rem; color: var(--muted); }
+.rung.done { background: var(--good-soft); border-color: transparent; }
+.rung[aria-expanded="true"] { outline: 2px solid var(--accent); outline-offset: -1px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.card {
+  border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 12px; cursor: pointer; text-align: left;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
+}
+.card .nm { font-weight: 700; line-height: 1.2; }
+.card .box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line); display: grid; place-items: center; font-size: .85rem; font-weight: 800; }
+.card[aria-pressed="true"] { background: var(--good-soft); border-color: transparent; }
+.card[aria-pressed="true"] .box { background: var(--good); border-color: var(--good); color: var(--surface); }
+.stockcard { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; background: var(--bg); }
+.stockcard input { width: 64px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
+
+/* 3. Conditions */
+.odds { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; background: var(--accent-soft); border-radius: var(--radius); padding: 14px 18px; }
+.odds .big { font-family: var(--font-display); font-size: 2.6rem; font-weight: 800; color: var(--accent); line-height: 1; }
+@media (max-width: 480px) { .odds { grid-template-columns: minmax(0, 1fr); gap: 6px; } }
+.presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.presets button { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-weight: 700; font-size: .9rem; }
+.presets button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+select { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+.check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.check input { margin-top: 5px; accent-color: var(--accent); width: 17px; height: 17px; flex: none; }
+.check span { display: grid; gap: 2px; }
+details.adv summary, details.more summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+details.adv[open] summary { margin-bottom: 12px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+
+/* 4. Plan */
+.summary { font-size: 1.12rem; max-width: 68ch; }
+.summary b { font-family: var(--font-data); font-weight: 500; }
+.hint { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; color: var(--ink); }
+.next { border: 2px solid var(--accent); background: var(--surface); border-radius: var(--radius); padding: 18px; display: grid; gap: 14px; }
+.next > header { display: grid; gap: 4px; }
+.badge { justify-self: start; background: var(--accent); color: var(--accent-ink); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; padding: 2px 10px; border-radius: 999px; font-weight: 700; }
+.todo { display: grid; gap: 8px; }
+.item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 12px; background: var(--bg); border-radius: 8px; }
+.item .sw { margin-top: 2px; }
+.item .what { display: grid; gap: 2px; min-width: 0; }
+.item .what b { line-height: 1.25; }
+.item .how { font-size: .92rem; color: var(--muted); }
+.item .how strong { color: var(--ink); font-weight: 700; }
+.item.done-item { opacity: .7; }
+@media (max-width: 520px) {
+  .item { grid-template-columns: auto minmax(0, 1fr); }
+  .item .btn { grid-column: 2; justify-self: start; }
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px 4px 4px; font-weight: 700; }
+details.later { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+details.later > summary { cursor: pointer; padding: 14px 18px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; list-style: none; }
+details.later > summary::-webkit-details-marker { display: none; }
+details.later > summary::before { content: "▸"; color: var(--accent); margin-right: 4px; }
+details.later[open] > summary::before { content: "▾"; }
+details.later > summary .t { font-weight: 700; flex: 1; }
+details.later > .todo { padding: 0 18px 18px; }
+.empty { background: var(--good-soft); color: var(--ink); border-radius: var(--radius); padding: 20px; display: grid; gap: 6px; }
+
+.sw { width: 24px; height: 24px; border-radius: 50%; flex: none; border: 1px solid rgb(0 0 0 / .25); }
+
+/* Mémo */
+.memo { display: grid; gap: 16px; }
+.memo ul, .memo ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.memo li { max-width: 75ch; }
+.tips { counter-reset: tip; list-style: none; padding: 0 !important; }
+.tips li { counter-increment: tip; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; }
+.tips li::before { content: counter(tip); font-family: var(--font-display); font-weight: 800; color: var(--accent); font-size: 1.15rem; line-height: 1.3; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+th, td { text-align: left; padding: 6px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+th { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: var(--sunken); }
+td.r, th.r { text-align: right; }
+tr.hl td { background: var(--accent-soft); font-weight: 700; }
+textarea { width: 100%; min-height: 80px; font-family: var(--font-data); font-size: .8rem; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; color: var(--ink); }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  background: var(--ink); color: var(--bg); border-radius: 999px; padding: 10px 12px 10px 18px; display: flex; gap: 14px; align-items: center;
+  box-shadow: 0 6px 20px rgb(0 0 0 / .25); z-index: 20; max-width: calc(100% - 32px);
+}
+.toast button { background: none; border: 1px solid currentColor; color: inherit; border-radius: 999px; padding: 2px 12px; cursor: pointer; font-weight: 700; }
+footer { color: var(--muted); font-size: .85rem; display: grid; gap: 4px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Registre d'élevage · Dofus 3.7</span>
+    <h1>Génération 10</h1>
+    <p>Suis les 4 étapes ci-dessous : le site te dit quoi capturer et quoi accoupler, dans l'ordre, pour boucler les succès de naissance de la génération 2 à la génération 10.</p>
+  </header>
+
+  <section class="step" aria-labelledby="s1">
+    <span class="n" aria-hidden="true">1</span>
+    <div class="body">
+      <div class="step-head"><h2 id="s1">Choisis ta famille de montures</h2>
+        <p>Chaque famille a ses propres succès et ses propres croisements. Ta progression est gardée séparément pour chacune.</p></div>
+      <div class="families" id="families"></div>
+    </div>
+  </section>
+
+  <section class="step" aria-labelledby="s2">
+    <span class="n" aria-hidden="true">2</span>
+    <div class="body">
+      <div class="step-head"><h2 id="s2">Coche ce que tu as déjà fait naître</h2>
+        <p>Ouvre l'interface des succès en jeu (depuis la 3.7, une icône y signale les montures manquantes) et reporte-les ici. Clique sur une génération pour voir ses montures.</p></div>
+      <div class="panel" id="progress"></div>
+    </div>
+  </section>
+
+  <section class="step" aria-labelledby="s3">
+    <span class="n" aria-hidden="true">3</span>
+    <div class="body">
+      <div class="step-head"><h2 id="s3">Indique tes conditions d'accouplement</h2>
+        <p>Plus tes parents ont de niveau, plus le bébé a de chances d'avoir la nouvelle couleur. C'est le réglage qui change le plus le nombre d'accouplements.</p></div>
+      <div class="panel" id="conditions"></div>
+    </div>
+  </section>
+
+  <section class="step" aria-labelledby="s4">
+    <span class="n" aria-hidden="true">4</span>
+    <div class="body">
+      <div class="step-head"><h2 id="s4">Suis ton plan</h2>
+        <p>Fais les étapes dans l'ordre. Quand un bébé naît, clique sur « C'est né » : le plan se met à jour tout seul.</p></div>
+      <div class="body" id="plan"></div>
+    </div>
+  </section>
+
+  <section class="step" aria-labelledby="s5">
+    <span class="n" aria-hidden="true">?</span>
+    <div class="body">
+      <div class="step-head"><h2 id="s5">Comprendre et aller plus vite</h2>
+        <p>Les règles de l'élevage depuis la refonte 3.5, les astuces pour économiser des accouplements et la sauvegarde de ta progression.</p></div>
+      <div class="memo" id="memo"></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Recettes de croisement : données communautaires (dragodinde.fr). Noms officiels : DofusDB. Mécaniques : guides de l'éleveur à jour de la 3.7. En jeu, la fenêtre d'accouplement affiche la probabilité réelle : c'est elle qui fait foi.</span>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script id="mount-data" type="application/json">{"dragodinde":[{"id":"rousse","name":"Rousse","gen":1,"pure":true,"colors":["rousse"],"recipes":[]},{"id":"doree","name":"Dorée","gen":1,"pure":true,"colors":["doree"],"recipes":[]},{"id":"amande","name":"Amande","gen":1,"pure":true,"colors":["amande"],"recipes":[]},{"id":"amande_doree","name":"Amande et Dorée","gen":2,"pure":false,"colors":["amande","doree"],"recipes":[["amande","doree"]]},{"id":"amande_rousse","name":"Amande et Rousse","gen":2,"pure":false,"colors":["amande","rousse"],"recipes":[["amande","rousse"]]},{"id":"doree_rousse","name":"Dorée et Rousse","gen":2,"pure":false,"colors":["doree","rousse"],"recipes":[["doree","rousse"]]},{"id":"indigo","name":"Indigo","gen":3,"pure":true,"colors":["indigo"],"recipes":[["amande_doree","amande_rousse"]]},{"id":"ebene","name":"Ébène","gen":3,"pure":true,"colors":["ebene"],"recipes":[["amande_doree","doree_rousse"]]},{"id":"ebene_rousse","name":"Ébène et Rousse","gen":4,"pure":false,"colors":["ebene","rousse"],"recipes":[["ebene","rousse"]]},{"id":"amande_ebene","name":"Amande et Ébène","gen":4,"pure":false,"colors":["amande","ebene"],"recipes":[["amande","ebene"]]},{"id":"amande_indigo","name":"Amande et Indigo","gen":4,"pure":false,"colors":["amande","indigo"],"recipes":[["amande","indigo"]]},{"id":"doree_ebene","name":"Dorée et Ébène","gen":4,"pure":false,"colors":["doree","ebene"],"recipes":[["doree","ebene"]]},{"id":"doree_indigo","name":"Dorée et Indigo","gen":4,"pure":false,"colors":["doree","indigo"],"recipes":[["doree","indigo"]]},{"id":"ebene_indigo","name":"Ébène et Indigo","gen":4,"pure":false,"colors":["ebene","indigo"],"recipes":[["ebene","indigo"]]},{"id":"indigo_rousse","name":"Indigo et Rousse","gen":4,"pure":false,"colors":["indigo","rousse"],"recipes":[["indigo","rousse"]]},{"id":"pourpre","name":"Pourpre","gen":5,"pure":true,"colors":["pourpre"],"recipes":[["amande_rousse","ebene_indigo"]]},{"id":"orchidee","name":"Orchidée","gen":5,"pure":true,"colors":["orchidee"],"recipes":[["doree_rousse","ebene_indigo"]]},{"id":"amande_orchidee","name":"Amande et Orchidée","gen":6,"pure":false,"colors":["amande","orchidee"],"recipes":[["amande","orchidee"]]},{"id":"amande_pourpre","name":"Amande et Pourpre","gen":6,"pure":false,"colors":["amande","pourpre"],"recipes":[["amande","pourpre"]]},{"id":"doree_orchidee","name":"Dorée et Orchidée","gen":6,"pure":false,"colors":["doree","orchidee"],"recipes":[["doree","orchidee"]]},{"id":"doree_pourpre","name":"Dorée et Pourpre","gen":6,"pure":false,"colors":["doree","pourpre"],"recipes":[["doree","pourpre"]]},{"id":"ebene_orchidee","name":"Ébène et Orchidée","gen":6,"pure":false,"colors":["ebene","orchidee"],"recipes":[["ebene","orchidee"]]},{"id":"ebene_pourpre","name":"Ébène et Pourpre","gen":6,"pure":false,"colors":["ebene","pourpre"],"recipes":[["ebene","pourpre"]]},{"id":"indigo_orchidee","name":"Indigo et Orchidée","gen":6,"pure":false,"colors":["indigo","orchidee"],"recipes":[["indigo","orchidee"]]},{"id":"indigo_pourpre","name":"Indigo et Pourpre","gen":6,"pure":false,"colors":["indigo","pourpre"],"recipes":[["indigo","pourpre"]]},{"id":"orchidee_rousse","name":"Orchidée et Rousse","gen":6,"pure":false,"colors":["orchidee","rousse"],"recipes":[["orchidee","rousse"]]},{"id":"pourpre_rousse","name":"Pourpre et Rousse","gen":6,"pure":false,"colors":["pourpre","rousse"],"recipes":[["pourpre","rousse"]]},{"id":"orchidee_pourpre","name":"Orchidée et Pourpre","gen":6,"pure":false,"colors":["orchidee","pourpre"],"recipes":[["orchidee","pourpre"]]},{"id":"turquoise","name":"Turquoise","gen":7,"pure":true,"colors":["turquoise"],"recipes":[["ebene_orchidee","orchidee_pourpre"]]},{"id":"ivoire","name":"Ivoire","gen":7,"pure":true,"colors":["ivoire"],"recipes":[["indigo_pourpre","orchidee_pourpre"]]},{"id":"ebene_ivoire","name":"Ébène et Ivoire","gen":8,"pure":false,"colors":["ebene","ivoire"],"recipes":[["ebene","ivoire"]]},{"id":"ivoire_rousse","name":"Ivoire et Rousse","gen":8,"pure":false,"colors":["ivoire","rousse"],"recipes":[["ivoire","rousse"]]},{"id":"amande_ivoire","name":"Amande et Ivoire","gen":8,"pure":false,"colors":["amande","ivoire"],"recipes":[["amande","ivoire"]]},{"id":"amande_turquoise","name":"Amande et Turquoise","gen":8,"pure":false,"colors":["amande","turquoise"],"recipes":[["amande","turquoise"]]},{"id":"doree_ivoire","name":"Dorée et Ivoire","gen":8,"pure":false,"colors":["doree","ivoire"],"recipes":[["doree","ivoire"]]},{"id":"doree_turquoise","name":"Dorée et Turquoise","gen":8,"pure":false,"colors":["doree","turquoise"],"recipes":[["doree","turquoise"]]},{"id":"ebene_turquoise","name":"Ébène et Turquoise","gen":8,"pure":false,"colors":["ebene","turquoise"],"recipes":[["ebene","turquoise"]]},{"id":"indigo_ivoire","name":"Indigo et Ivoire","gen":8,"pure":false,"colors":["indigo","ivoire"],"recipes":[["indigo","ivoire"]]},{"id":"indigo_turquoise","name":"Indigo et Turquoise","gen":8,"pure":false,"colors":["indigo","turquoise"],"recipes":[["indigo","turquoise"]]},{"id":"ivoire_turquoise","name":"Ivoire et Turquoise","gen":8,"pure":false,"colors":["ivoire","turquoise"],"recipes":[["ivoire","turquoise"]]},{"id":"ivoire_orchidee","name":"Ivoire et Orchidée","gen":8,"pure":false,"colors":["ivoire","orchidee"],"recipes":[["ivoire","orchidee"]]},{"id":"ivoire_pourpre","name":"Ivoire et Pourpre","gen":8,"pure":false,"colors":["ivoire","pourpre"],"recipes":[["ivoire","pourpre"]]},{"id":"turquoise_rousse","name":"Turquoise et Rousse","gen":8,"pure":false,"colors":["turquoise","rousse"],"recipes":[["turquoise","rousse"]]},{"id":"turquoise_orchidee","name":"Turquoise et Orchidée","gen":8,"pure":false,"colors":["turquoise","orchidee"],"recipes":[["turquoise","orchidee"]]},{"id":"turquoise_pourpre","name":"Turquoise et Pourpre","gen":8,"pure":false,"colors":["turquoise","pourpre"],"recipes":[["turquoise","pourpre"]]},{"id":"emeraude","name":"Émeraude","gen":9,"pure":true,"colors":["emeraude"],"recipes":[["ivoire_turquoise","ivoire_pourpre"]]},{"id":"prune","name":"Prune","gen":9,"pure":true,"colors":["prune"],"recipes":[["ivoire_turquoise","turquoise_orchidee"]]},{"id":"amande_emeraude","name":"Amande et Émeraude","gen":10,"pure":false,"colors":["amande","emeraude"],"recipes":[["amande","emeraude"]]},{"id":"doree_emeraude","name":"Dorée et Émeraude","gen":10,"pure":false,"colors":["doree","emeraude"],"recipes":[["doree","emeraude"]]},{"id":"ebene_emeraude","name":"Ébène et Émeraude","gen":10,"pure":false,"colors":["ebene","emeraude"],"recipes":[["ebene","emeraude"]]},{"id":"emeraude_indigo","name":"Émeraude et Indigo","gen":10,"pure":false,"colors":["emeraude","indigo"],"recipes":[["emeraude","indigo"]]},{"id":"emeraude_ivoire","name":"Émeraude et Ivoire","gen":10,"pure":false,"colors":["emeraude","ivoire"],"recipes":[["emeraude","ivoire"]]},{"id":"emeraude_rousse","name":"Émeraude et Rousse","gen":10,"pure":false,"colors":["emeraude","rousse"],"recipes":[["emeraude","rousse"]]},{"id":"emeraude_turquoise","name":"Émeraude et Turquoise","gen":10,"pure":false,"colors":["emeraude","turquoise"],"recipes":[["emeraude","turquoise"]]},{"id":"emeraude_orchidee","name":"Émeraude et Orchidée","gen":10,"pure":false,"colors":["emeraude","orchidee"],"recipes":[["emeraude","orchidee"]]},{"id":"emeraude_pourpre","name":"Émeraude et Pourpre","gen":10,"pure":false,"colors":["emeraude","pourpre"],"recipes":[["emeraude","pourpre"]]},{"id":"prune_amande","name":"Prune et Amande","gen":10,"pure":false,"colors":["prune","amande"],"recipes":[["prune","amande"]]},{"id":"prune_doree","name":"Prune et Dorée","gen":10,"pure":false,"colors":["prune","doree"],"recipes":[["prune","doree"]]},{"id":"prune_ebene","name":"Prune et Ébène","gen":10,"pure":false,"colors":["prune","ebene"],"recipes":[["prune","ebene"]]},{"id":"prune_emeraude","name":"Prune et Émeraude","gen":10,"pure":false,"colors":["prune","emeraude"],"recipes":[["prune","emeraude"]]},{"id":"prune_indigo","name":"Prune et Indigo","gen":10,"pure":false,"colors":["prune","indigo"],"recipes":[["prune","indigo"]]},{"id":"prune_ivoire","name":"Prune et Ivoire","gen":10,"pure":false,"colors":["prune","ivoire"],"recipes":[["prune","ivoire"]]},{"id":"prune_rousse","name":"Prune et Rousse","gen":10,"pure":false,"colors":["prune","rousse"],"recipes":[["prune","rousse"]]},{"id":"prune_turquoise","name":"Prune et Turquoise","gen":10,"pure":false,"colors":["prune","turquoise"],"recipes":[["prune","turquoise"]]},{"id":"prune_orchidee","name":"Prune et Orchidée","gen":10,"pure":false,"colors":["prune","orchidee"],"recipes":[["prune","orchidee"]]},{"id":"prune_pourpre","name":"Prune et Pourpre","gen":10,"pure":false,"colors":["prune","pourpre"],"recipes":[["prune","pourpre"]]}],"muldo":[{"id":"dore","name":"Doré","gen":1,"pure":true,"colors":["dore"],"recipes":[]},{"id":"ebene","name":"Ébène","gen":1,"pure":true,"colors":["ebene"],"recipes":[]},{"id":"indigo","name":"Indigo","gen":1,"pure":true,"colors":["indigo"],"recipes":[]},{"id":"pourpre","name":"Pourpre","gen":1,"pure":true,"colors":["pourpre"],"recipes":[]},{"id":"orchidee","name":"Orchidée","gen":1,"pure":true,"colors":["orchidee"],"recipes":[]},{"id":"dore_pourpre","name":"Doré et Pourpre","gen":2,"pure":false,"colors":["dore","pourpre"],"recipes":[["dore","pourpre"]]},{"id":"indigo_pourpre","name":"Indigo et Pourpre","gen":2,"pure":false,"colors":["indigo","pourpre"],"recipes":[["indigo","pourpre"]]},{"id":"ebene_pourpre","name":"Ébène et Pourpre","gen":2,"pure":false,"colors":["ebene","pourpre"],"recipes":[["ebene","pourpre"]]},{"id":"orchidee_pourpre","name":"Orchidée et Pourpre","gen":2,"pure":false,"colors":["orchidee","pourpre"],"recipes":[["orchidee","pourpre"]]},{"id":"dore_orchidee","name":"Doré et Orchidée","gen":2,"pure":false,"colors":["dore","orchidee"],"recipes":[["dore","orchidee"]]},{"id":"indigo_orchidee","name":"Indigo et Orchidée","gen":2,"pure":false,"colors":["indigo","orchidee"],"recipes":[["indigo","orchidee"]]},{"id":"ebene_orchidee","name":"Ébène et Orchidée","gen":2,"pure":false,"colors":["ebene","orchidee"],"recipes":[["ebene","orchidee"]]},{"id":"dore_ebene","name":"Doré et Ébène","gen":2,"pure":false,"colors":["dore","ebene"],"recipes":[["dore","ebene"]]},{"id":"dore_indigo","name":"Doré et Indigo","gen":2,"pure":false,"colors":["dore","indigo"],"recipes":[["dore","indigo"]]},{"id":"ebene_indigo","name":"Ébène et Indigo","gen":2,"pure":false,"colors":["ebene","indigo"],"recipes":[["ebene","indigo"]]},{"id":"roux","name":"Roux","gen":3,"pure":true,"colors":["roux"],"recipes":[["dore_pourpre","dore_orchidee"],["dore_pourpre","dore_indigo"],["dore_pourpre","dore_ebene"],["dore_orchidee","dore_indigo"],["dore_orchidee","dore_ebene"],["dore_indigo","dore_ebene"]]},{"id":"amande","name":"Amande","gen":3,"pure":true,"colors":["amande"],"recipes":[["indigo_pourpre","ebene_orchidee"],["ebene_pourpre","indigo_orchidee"],["orchidee_pourpre","ebene_indigo"]]},{"id":"dore_amande","name":"Doré et Amande","gen":4,"pure":false,"colors":["dore","amande"],"recipes":[["dore","amande"]]},{"id":"ebene_amande","name":"Ébène et Amande","gen":4,"pure":false,"colors":["ebene","amande"],"recipes":[["ebene","amande"]]},{"id":"indigo_amande","name":"Indigo et Amande","gen":4,"pure":false,"colors":["indigo","amande"],"recipes":[["indigo","amande"]]},{"id":"orchidee_amande","name":"Orchidée et Amande","gen":4,"pure":false,"colors":["orchidee","amande"],"recipes":[["orchidee","amande"]]},{"id":"pourpre_amande","name":"Pourpre et Amande","gen":4,"pure":false,"colors":["pourpre","amande"],"recipes":[["pourpre","amande"]]},{"id":"roux_amande","name":"Roux et Amande","gen":4,"pure":false,"colors":["roux","amande"],"recipes":[["roux","amande"]]},{"id":"roux_dore","name":"Roux et Doré","gen":4,"pure":false,"colors":["roux","dore"],"recipes":[["roux","dore"]]},{"id":"roux_ebene","name":"Roux et Ébène","gen":4,"pure":false,"colors":["roux","ebene"],"recipes":[["roux","ebene"]]},{"id":"roux_indigo","name":"Roux et Indigo","gen":4,"pure":false,"colors":["roux","indigo"],"recipes":[["roux","indigo"]]},{"id":"roux_orchidee","name":"Roux et Orchidée","gen":4,"pure":false,"colors":["roux","orchidee"],"recipes":[["roux","orchidee"]]},{"id":"roux_pourpre","name":"Roux et Pourpre","gen":4,"pure":false,"colors":["roux","pourpre"],"recipes":[["roux","pourpre"]]},{"id":"ivoire","name":"Ivoire","gen":5,"pure":true,"colors":["ivoire"],"recipes":[["roux_dore","ebene_amande"],["roux_dore","indigo_amande"],["roux_dore","orchidee_amande"],["roux_dore","pourpre_amande"],["roux_amande","ebene_amande"],["roux_amande","pourpre_amande"],["roux_amande","indigo_amande"],["roux_amande","orchidee_amande"]]},{"id":"turquoise","name":"Turquoise","gen":5,"pure":true,"colors":["turquoise"],"recipes":[["roux_ebene","dore_amande"],["roux_orchidee","dore_amande"],["roux_pourpre","dore_amande"],["roux_ebene","roux_amande"],["roux_indigo","dore_amande"],["roux_indigo","roux_amande"],["roux_orchidee","roux_amande"],["roux_pourpre","roux_amande"]]},{"id":"pourpre_ivoire","name":"Pourpre et Ivoire","gen":6,"pure":false,"colors":["pourpre","ivoire"],"recipes":[["pourpre","ivoire"]]},{"id":"orchidee_ivoire","name":"Orchidée et Ivoire","gen":6,"pure":false,"colors":["orchidee","ivoire"],"recipes":[["orchidee","ivoire"]]},{"id":"indigo_ivoire","name":"Indigo et Ivoire","gen":6,"pure":false,"colors":["indigo","ivoire"],"recipes":[["indigo","ivoire"]]},{"id":"ebene_ivoire","name":"Ébène et Ivoire","gen":6,"pure":false,"colors":["ebene","ivoire"],"recipes":[["ebene","ivoire"]]},{"id":"dore_ivoire","name":"Doré et Ivoire","gen":6,"pure":false,"colors":["dore","ivoire"],"recipes":[["dore","ivoire"]]},{"id":"roux_ivoire","name":"Roux et Ivoire","gen":6,"pure":false,"colors":["roux","ivoire"],"recipes":[["roux","ivoire"]]},{"id":"amande_ivoire","name":"Amande et Ivoire","gen":6,"pure":false,"colors":["amande","ivoire"],"recipes":[["amande","ivoire"]]},{"id":"turquoise_ivoire","name":"Turquoise et Ivoire","gen":6,"pure":false,"colors":["turquoise","ivoire"],"recipes":[["turquoise","ivoire"]]},{"id":"turquoise_pourpre","name":"Turquoise et Pourpre","gen":6,"pure":false,"colors":["turquoise","pourpre"],"recipes":[["turquoise","pourpre"]]},{"id":"turquoise_orchidee","name":"Turquoise et Orchidée","gen":6,"pure":false,"colors":["turquoise","orchidee"],"recipes":[["turquoise","orchidee"]]},{"id":"turquoise_indigo","name":"Turquoise et Indigo","gen":6,"pure":false,"colors":["turquoise","indigo"],"recipes":[["turquoise","indigo"]]},{"id":"turquoise_ebene","name":"Turquoise et Ébène","gen":6,"pure":false,"colors":["turquoise","ebene"],"recipes":[["turquoise","ebene"]]},{"id":"turquoise_roux","name":"Turquoise et Roux","gen":6,"pure":false,"colors":["turquoise","roux"],"recipes":[["turquoise","roux"]]},{"id":"turquoise_amande","name":"Turquoise et Amande","gen":6,"pure":false,"colors":["turquoise","amande"],"recipes":[["turquoise","amande"]]},{"id":"turquoise_dore","name":"Turquoise et Doré","gen":6,"pure":false,"colors":["turquoise","dore"],"recipes":[["turquoise","dore"]]},{"id":"prune","name":"Prune","gen":7,"pure":true,"colors":["prune"],"recipes":[["ebene_ivoire","turquoise_pourpre"],["indigo_ivoire","turquoise_orchidee"],["orchidee_ivoire","turquoise_indigo"],["pourpre_ivoire","turquoise_ebene"]]},{"id":"emeraude","name":"Émeraude","gen":7,"pure":true,"colors":["emeraude"],"recipes":[["turquoise_ivoire","turquoise_dore"],["turquoise_ivoire","turquoise_amande"],["turquoise_ivoire","turquoise_roux"],["amande_ivoire","turquoise_ivoire"],["roux_ivoire","turquoise_amande"],["dore_ivoire","turquoise_amande"],["dore_ivoire","turquoise_roux"],["dore_ivoire","turquoise_ivoire"]]},{"id":"prune_pourpre","name":"Prune et Pourpre","gen":8,"pure":false,"colors":["prune","pourpre"],"recipes":[["prune","pourpre"]]},{"id":"prune_orchidee","name":"Prune et Orchidée","gen":8,"pure":false,"colors":["prune","orchidee"],"recipes":[["prune","orchidee"]]},{"id":"prune_indigo","name":"Prune et Indigo","gen":8,"pure":false,"colors":["prune","indigo"],"recipes":[["prune","indigo"]]},{"id":"prune_ebene","name":"Prune et Ébène","gen":8,"pure":false,"colors":["prune","ebene"],"recipes":[["prune","ebene"]]},{"id":"prune_dore","name":"Prune et Doré","gen":8,"pure":false,"colors":["prune","dore"],"recipes":[["prune","dore"]]},{"id":"prune_roux","name":"Prune et Roux","gen":8,"pure":false,"colors":["prune","roux"],"recipes":[["prune","roux"]]},{"id":"prune_amande","name":"Prune et Amande","gen":8,"pure":false,"colors":["prune","amande"],"recipes":[["prune","amande"]]},{"id":"prune_ivoire","name":"Prune et Ivoire","gen":8,"pure":false,"colors":["prune","ivoire"],"recipes":[["prune","ivoire"]]},{"id":"prune_turquoise","name":"Prune et Turquoise","gen":8,"pure":false,"colors":["prune","turquoise"],"recipes":[["prune","turquoise"]]},{"id":"prune_emeraude","name":"Prune et Émeraude","gen":8,"pure":false,"colors":["prune","emeraude"],"recipes":[["prune","emeraude"]]},{"id":"pourpre_emeraude","name":"Pourpre et Émeraude","gen":8,"pure":false,"colors":["pourpre","emeraude"],"recipes":[["pourpre","emeraude"]]},{"id":"orchidee_emeraude","name":"Orchidée et Émeraude","gen":8,"pure":false,"colors":["orchidee","emeraude"],"recipes":[["orchidee","emeraude"]]},{"id":"indigo_emeraude","name":"Indigo et Émeraude","gen":8,"pure":false,"colors":["indigo","emeraude"],"recipes":[["indigo","emeraude"]]},{"id":"ebene_emeraude","name":"Ébène et Émeraude","gen":8,"pure":false,"colors":["ebene","emeraude"],"recipes":[["ebene","emeraude"]]},{"id":"dore_emeraude","name":"Doré et Émeraude","gen":8,"pure":false,"colors":["dore","emeraude"],"recipes":[["dore","emeraude"]]},{"id":"roux_emeraude","name":"Roux et Émeraude","gen":8,"pure":false,"colors":["roux","emeraude"],"recipes":[["roux","emeraude"]]},{"id":"amande_emeraude","name":"Amande et Émeraude","gen":8,"pure":false,"colors":["amande","emeraude"],"recipes":[["amande","emeraude"]]},{"id":"ivoire_emeraude","name":"Ivoire et Émeraude","gen":8,"pure":false,"colors":["ivoire","emeraude"],"recipes":[["ivoire","emeraude"]]},{"id":"turquoise_emeraude","name":"Turquoise et Émeraude","gen":8,"pure":false,"colors":["turquoise","emeraude"],"recipes":[["turquoise","emeraude"]]},{"id":"ambre","name":"Ambre","gen":9,"pure":true,"colors":["ambre"],"recipes":[["pourpre_emeraude","roux_emeraude"],["orchidee_emeraude","amande_emeraude"],["indigo_emeraude","ivoire_emeraude"],["ebene_emeraude","turquoise_emeraude"],["dore_emeraude","prune_emeraude"]]},{"id":"corail","name":"Corail","gen":9,"pure":true,"colors":["corail"],"recipes":[["prune_pourpre","prune_roux"],["prune_orchidee","prune_amande"],["prune_indigo","prune_ivoire"],["prune_ebene","prune_turquoise"],["prune_dore","prune_emeraude"]]},{"id":"azur","name":"Azur","gen":9,"pure":true,"colors":["azur"],"recipes":[["pourpre_emeraude","prune_roux"],["orchidee_emeraude","prune_amande"],["indigo_emeraude","prune_ivoire"],["ebene_emeraude","prune_turquoise"],["dore_emeraude","prune_ivoire"]]},{"id":"aigue_marine","name":"Aigue-marine","gen":9,"pure":true,"colors":["aigue_marine"],"recipes":[["prune_pourpre","roux_emeraude"]]},{"id":"ambre_dore","name":"Ambre et Doré","gen":10,"pure":false,"colors":["ambre","dore"],"recipes":[["ambre","dore"]]},{"id":"ambre_ebene","name":"Ambre et Ébène","gen":10,"pure":false,"colors":["ambre","ebene"],"recipes":[["ambre","ebene"]]},{"id":"ambre_indigo","name":"Ambre et Indigo","gen":10,"pure":false,"colors":["ambre","indigo"],"recipes":[["ambre","indigo"]]},{"id":"ambre_pourpre","name":"Ambre et Pourpre","gen":10,"pure":false,"colors":["ambre","pourpre"],"recipes":[["ambre","pourpre"]]},{"id":"ambre_orchidee","name":"Ambre et Orchidée","gen":10,"pure":false,"colors":["ambre","orchidee"],"recipes":[["ambre","orchidee"]]},{"id":"ambre_amande","name":"Ambre et Amande","gen":10,"pure":false,"colors":["ambre","amande"],"recipes":[["ambre","amande"]]},{"id":"ambre_roux","name":"Ambre et Roux","gen":10,"pure":false,"colors":["ambre","roux"],"recipes":[["ambre","roux"]]},{"id":"ambre_ivoire","name":"Ambre et Ivoire","gen":10,"pure":false,"colors":["ambre","ivoire"],"recipes":[["ambre","ivoire"]]},{"id":"ambre_turquoise","name":"Ambre et Turquoise","gen":10,"pure":false,"colors":["ambre","turquoise"],"recipes":[["ambre","turquoise"]]},{"id":"ambre_emeraude","name":"Ambre et Émeraude","gen":10,"pure":false,"colors":["ambre","emeraude"],"recipes":[["ambre","emeraude"]]},{"id":"ambre_prune","name":"Ambre et Prune","gen":10,"pure":false,"colors":["ambre","prune"],"recipes":[["ambre","prune"]]},{"id":"corail_dore","name":"Corail et Doré","gen":10,"pure":false,"colors":["corail","dore"],"recipes":[["corail","dore"]]},{"id":"corail_ebene","name":"Corail et Ébène","gen":10,"pure":false,"colors":["corail","ebene"],"recipes":[["corail","ebene"]]},{"id":"corail_indigo","name":"Corail et Indigo","gen":10,"pure":false,"colors":["corail","indigo"],"recipes":[["corail","indigo"]]},{"id":"corail_pourpre","name":"Corail et Pourpre","gen":10,"pure":false,"colors":["corail","pourpre"],"recipes":[["corail","pourpre"]]},{"id":"corail_orchidee","name":"Corail et Orchidée","gen":10,"pure":false,"colors":["corail","orchidee"],"recipes":[["corail","orchidee"]]},{"id":"corail_amande","name":"Corail et Amande","gen":10,"pure":false,"colors":["corail","amande"],"recipes":[["corail","amande"]]},{"id":"corail_roux","name":"Corail et Roux","gen":10,"pure":false,"colors":["corail","roux"],"recipes":[["corail","roux"]]},{"id":"corail_ivoire","name":"Corail et Ivoire","gen":10,"pure":false,"colors":["corail","ivoire"],"recipes":[["corail","ivoire"]]},{"id":"corail_turquoise","name":"Corail et Turquoise","gen":10,"pure":false,"colors":["corail","turquoise"],"recipes":[["corail","turquoise"]]},{"id":"corail_emeraude","name":"Corail et Émeraude","gen":10,"pure":false,"colors":["corail","emeraude"],"recipes":[["corail","emeraude"]]},{"id":"corail_prune","name":"Corail et Prune","gen":10,"pure":false,"colors":["corail","prune"],"recipes":[["corail","prune"]]},{"id":"azur_dore","name":"Azur et Doré","gen":10,"pure":false,"colors":["azur","dore"],"recipes":[["azur","dore"]]},{"id":"azur_ebene","name":"Azur et Ébène","gen":10,"pure":false,"colors":["azur","ebene"],"recipes":[["azur","ebene"]]},{"id":"azur_indigo","name":"Azur et Indigo","gen":10,"pure":false,"colors":["azur","indigo"],"recipes":[["azur","indigo"]]},{"id":"azur_pourpre","name":"Azur et Pourpre","gen":10,"pure":false,"colors":["azur","pourpre"],"recipes":[["azur","pourpre"]]},{"id":"azur_orchidee","name":"Azur et Orchidée","gen":10,"pure":false,"colors":["azur","orchidee"],"recipes":[["azur","orchidee"]]},{"id":"azur_amande","name":"Azur et Amande","gen":10,"pure":false,"colors":["azur","amande"],"recipes":[["azur","amande"]]},{"id":"azur_roux","name":"Azur et Roux","gen":10,"pure":false,"colors":["azur","roux"],"recipes":[["azur","roux"]]},{"id":"azur_ivoire","name":"Azur et Ivoire","gen":10,"pure":false,"colors":["azur","ivoire"],"recipes":[["azur","ivoire"]]},{"id":"azur_turquoise","name":"Azur et Turquoise","gen":10,"pure":false,"colors":["azur","turquoise"],"recipes":[["azur","turquoise"]]},{"id":"azur_emeraude","name":"Azur et Émeraude","gen":10,"pure":false,"colors":["azur","emeraude"],"recipes":[["azur","emeraude"]]},{"id":"azur_prune","name":"Azur et Prune","gen":10,"pure":false,"colors":["azur","prune"],"recipes":[["azur","prune"]]},{"id":"aigue_marine_dore","name":"Aigue-marine et Doré","gen":10,"pure":false,"colors":["aigue_marine","dore"],"recipes":[["aigue_marine","dore"]]},{"id":"aigue_marine_ebene","name":"Aigue-marine et Ébène","gen":10,"pure":false,"colors":["aigue_marine","ebene"],"recipes":[["aigue_marine","ebene"]]},{"id":"aigue_marine_indigo","name":"Aigue-marine et Indigo","gen":10,"pure":false,"colors":["aigue_marine","indigo"],"recipes":[["aigue_marine","indigo"]]},{"id":"aigue_marine_pourpre","name":"Aigue-marine et Pourpre","gen":10,"pure":false,"colors":["aigue_marine","pourpre"],"recipes":[["aigue_marine","pourpre"]]},{"id":"aigue_marine_orchidee","name":"Aigue-marine et Orchidée","gen":10,"pure":false,"colors":["aigue_marine","orchidee"],"recipes":[["aigue_marine","orchidee"]]},{"id":"aigue_marine_amande","name":"Aigue-marine et Amande","gen":10,"pure":false,"colors":["aigue_marine","amande"],"recipes":[["aigue_marine","amande"]]},{"id":"aigue_marine_roux","name":"Aigue-marine et Roux","gen":10,"pure":false,"colors":["aigue_marine","roux"],"recipes":[["aigue_marine","roux"]]},{"id":"aigue_marine_ivoire","name":"Aigue-marine et Ivoire","gen":10,"pure":false,"colors":["aigue_marine","ivoire"],"recipes":[["aigue_marine","ivoire"]]},{"id":"aigue_marine_turquoise","name":"Aigue-marine et Turquoise","gen":10,"pure":false,"colors":["aigue_marine","turquoise"],"recipes":[["aigue_marine","turquoise"]]},{"id":"aigue_marine_emeraude","name":"Aigue-marine et Émeraude","gen":10,"pure":false,"colors":["aigue_marine","emeraude"],"recipes":[["aigue_marine","emeraude"]]},{"id":"aigue_marine_prune","name":"Aigue-marine et Prune","gen":10,"pure":false,"colors":["aigue_marine","prune"],"recipes":[["aigue_marine","prune"]]},{"id":"ambre_corail","name":"Ambre et Corail","gen":10,"pure":false,"colors":["ambre","corail"],"recipes":[["ambre","corail"]]},{"id":"ambre_azur","name":"Ambre et Azur","gen":10,"pure":false,"colors":["ambre","azur"],"recipes":[["ambre","azur"]]},{"id":"ambre_aigue_marine","name":"Ambre et Aigue-marine","gen":10,"pure":false,"colors":["ambre","aigue_marine"],"recipes":[["ambre","aigue_marine"]]},{"id":"corail_azur","name":"Corail et Azur","gen":10,"pure":false,"colors":["corail","azur"],"recipes":[["corail","azur"]]},{"id":"corail_aigue_marine","name":"Corail et Aigue-marine","gen":10,"pure":false,"colors":["corail","aigue_marine"],"recipes":[["corail","aigue_marine"]]},{"id":"azur_aigue_marine","name":"Azur et Aigue-marine","gen":10,"pure":false,"colors":["azur","aigue_marine"],"recipes":[["azur","aigue_marine"]]}],"volkorne":[{"id":"indigo","name":"Indigo","gen":1,"pure":true,"colors":["indigo"],"recipes":[]},{"id":"ebene","name":"Ébène","gen":1,"pure":true,"colors":["ebene"],"recipes":[]},{"id":"pourpre","name":"Pourpre","gen":1,"pure":true,"colors":["pourpre"],"recipes":[]},{"id":"orchidee","name":"Orchidée","gen":1,"pure":true,"colors":["orchidee"],"recipes":[]},{"id":"pourpre_orchidee","name":"Pourpre et Orchidée","gen":2,"pure":false,"colors":["pourpre","orchidee"],"recipes":[["pourpre","orchidee"]]},{"id":"pourpre_indigo","name":"Pourpre et Indigo","gen":2,"pure":false,"colors":["pourpre","indigo"],"recipes":[["pourpre","indigo"]]},{"id":"pourpre_ebene","name":"Pourpre et Ébène","gen":2,"pure":false,"colors":["pourpre","ebene"],"recipes":[["pourpre","ebene"]]},{"id":"orchidee_indigo","name":"Orchidée et Indigo","gen":2,"pure":false,"colors":["orchidee","indigo"],"recipes":[["orchidee","indigo"]]},{"id":"orchidee_ebene","name":"Orchidée et Ébène","gen":2,"pure":false,"colors":["orchidee","ebene"],"recipes":[["orchidee","ebene"]]},{"id":"indigo_ebene","name":"Indigo et Ébène","gen":2,"pure":false,"colors":["indigo","ebene"],"recipes":[["indigo","ebene"]]},{"id":"roux","name":"Roux","gen":3,"pure":true,"colors":["roux"],"recipes":[["pourpre_orchidee","pourpre_indigo"],["pourpre_orchidee","pourpre_ebene"],["pourpre_indigo","pourpre_ebene"]]},{"id":"amande","name":"Amande","gen":3,"pure":true,"colors":["amande"],"recipes":[["pourpre_ebene","orchidee_ebene"],["pourpre_ebene","indigo_ebene"],["orchidee_ebene","indigo_ebene"]]},{"id":"ivoire","name":"Ivoire","gen":3,"pure":true,"colors":["ivoire"],"recipes":[["pourpre_indigo","indigo_ebene"],["pourpre_indigo","orchidee_indigo"],["orchidee_indigo","indigo_ebene"]]},{"id":"turquoise","name":"Turquoise","gen":3,"pure":true,"colors":["turquoise"],"recipes":[["pourpre_orchidee","orchidee_ebene"],["orchidee_indigo","orchidee_ebene"],["pourpre_orchidee","orchidee_indigo"]]},{"id":"amande_pourpre","name":"Amande et Pourpre","gen":4,"pure":false,"colors":["amande","pourpre"],"recipes":[["amande","pourpre"]]},{"id":"amande_orchidee","name":"Amande et Orchidée","gen":4,"pure":false,"colors":["amande","orchidee"],"recipes":[["amande","orchidee"]]},{"id":"amande_indigo","name":"Amande et Indigo","gen":4,"pure":false,"colors":["amande","indigo"],"recipes":[["amande","indigo"]]},{"id":"amande_ebene","name":"Amande et Ébène","gen":4,"pure":false,"colors":["amande","ebene"],"recipes":[["amande","ebene"]]},{"id":"amande_roux","name":"Amande et Roux","gen":4,"pure":false,"colors":["amande","roux"],"recipes":[["amande","roux"]]},{"id":"amande_ivoire","name":"Amande et Ivoire","gen":4,"pure":false,"colors":["amande","ivoire"],"recipes":[["amande","ivoire"]]},{"id":"amande_turquoise","name":"Amande et Turquoise","gen":4,"pure":false,"colors":["amande","turquoise"],"recipes":[["amande","turquoise"]]},{"id":"roux_pourpre","name":"Roux et Pourpre","gen":4,"pure":false,"colors":["roux","pourpre"],"recipes":[["roux","pourpre"]]},{"id":"roux_orchidee","name":"Roux et Orchidée","gen":4,"pure":false,"colors":["roux","orchidee"],"recipes":[["roux","orchidee"]]},{"id":"roux_indigo","name":"Roux et Indigo","gen":4,"pure":false,"colors":["roux","indigo"],"recipes":[["roux","indigo"]]},{"id":"roux_ebene","name":"Roux et Ébène","gen":4,"pure":false,"colors":["roux","ebene"],"recipes":[["roux","ebene"]]},{"id":"roux_ivoire","name":"Roux et Ivoire","gen":4,"pure":false,"colors":["roux","ivoire"],"recipes":[["roux","ivoire"]]},{"id":"roux_turquoise","name":"Roux et Turquoise","gen":4,"pure":false,"colors":["roux","turquoise"],"recipes":[["roux","turquoise"]]},{"id":"ivoire_pourpre","name":"Ivoire et Pourpre","gen":4,"pure":false,"colors":["ivoire","pourpre"],"recipes":[["ivoire","pourpre"]]},{"id":"ivoire_orchidee","name":"Ivoire et Orchidée","gen":4,"pure":false,"colors":["ivoire","orchidee"],"recipes":[["ivoire","orchidee"]]},{"id":"ivoire_indigo","name":"Ivoire et Indigo","gen":4,"pure":false,"colors":["ivoire","indigo"],"recipes":[["ivoire","indigo"]]},{"id":"ivoire_ebene","name":"Ivoire et Ébène","gen":4,"pure":false,"colors":["ivoire","ebene"],"recipes":[["ivoire","ebene"]]},{"id":"ivoire_turquoise","name":"Ivoire et Turquoise","gen":4,"pure":false,"colors":["ivoire","turquoise"],"recipes":[["ivoire","turquoise"]]},{"id":"turquoise_pourpre","name":"Turquoise et Pourpre","gen":4,"pure":false,"colors":["turquoise","pourpre"],"recipes":[["turquoise","pourpre"]]},{"id":"turquoise_orchidee","name":"Turquoise et Orchidée","gen":4,"pure":false,"colors":["turquoise","orchidee"],"recipes":[["turquoise","orchidee"]]},{"id":"turquoise_indigo","name":"Turquoise et Indigo","gen":4,"pure":false,"colors":["turquoise","indigo"],"recipes":[["turquoise","indigo"]]},{"id":"turquoise_ebene","name":"Turquoise et Ébène","gen":4,"pure":false,"colors":["turquoise","ebene"],"recipes":[["turquoise","ebene"]]},{"id":"prune","name":"Prune","gen":5,"pure":true,"colors":["prune"],"recipes":[["amande_pourpre","amande_roux"],["amande_orchidee","amande_roux"],["amande_indigo","amande_roux"],["amande_ebene","amande_roux"],["amande_roux","amande_turquoise"],["amande_roux","amande_ivoire"],["amande_roux","roux_pourpre"],["amande_roux","roux_orchidee"],["amande_roux","roux_indigo"],["amande_roux","roux_ebene"],["amande_roux","roux_ivoire"],["amande_roux","roux_turquoise"]]},{"id":"emeraude","name":"Émeraude","gen":5,"pure":true,"colors":["emeraude"],"recipes":[["ivoire_orchidee","ivoire_turquoise"],["ivoire_indigo","ivoire_turquoise"],["ivoire_ebene","ivoire_turquoise"],["ivoire_pourpre","ivoire_turquoise"],["roux_ivoire","ivoire_turquoise"],["roux_turquoise","ivoire_turquoise"],["amande_ivoire","ivoire_turquoise"],["amande_turquoise","ivoire_turquoise"],["ivoire_turquoise","turquoise_orchidee"],["ivoire_turquoise","turquoise_pourpre"],["ivoire_turquoise","turquoise_indigo"],["ivoire_turquoise","turquoise_ebene"]]},{"id":"prune_pourpre","name":"Prune et Pourpre","gen":6,"pure":false,"colors":["prune","pourpre"],"recipes":[["prune","pourpre"]]},{"id":"prune_orchidee","name":"Prune et Orchidée","gen":6,"pure":false,"colors":["prune","orchidee"],"recipes":[["prune","orchidee"]]},{"id":"prune_indigo","name":"Prune et Indigo","gen":6,"pure":false,"colors":["prune","indigo"],"recipes":[["prune","indigo"]]},{"id":"prune_ebene","name":"Prune et Ébène","gen":6,"pure":false,"colors":["prune","ebene"],"recipes":[["prune","ebene"]]},{"id":"prune_amande","name":"Prune et Amande","gen":6,"pure":false,"colors":["prune","amande"],"recipes":[["prune","amande"]]},{"id":"prune_turquoise","name":"Prune et Turquoise","gen":6,"pure":false,"colors":["prune","turquoise"],"recipes":[["prune","turquoise"]]},{"id":"prune_emeraude","name":"Prune et Émeraude","gen":6,"pure":false,"colors":["prune","emeraude"],"recipes":[["prune","emeraude"]]},{"id":"prune_roux","name":"Prune et Roux","gen":6,"pure":false,"colors":["prune","roux"],"recipes":[["prune","roux"]]},{"id":"prune_ivoire","name":"Prune et Ivoire","gen":6,"pure":false,"colors":["prune","ivoire"],"recipes":[["prune","ivoire"]]},{"id":"emeraude_pourpre","name":"Émeraude et Pourpre","gen":6,"pure":false,"colors":["emeraude","pourpre"],"recipes":[["emeraude","pourpre"]]},{"id":"emeraude_orchidee","name":"Émeraude et Orchidée","gen":6,"pure":false,"colors":["emeraude","orchidee"],"recipes":[["emeraude","orchidee"]]},{"id":"emeraude_indigo","name":"Émeraude et Indigo","gen":6,"pure":false,"colors":["emeraude","indigo"],"recipes":[["emeraude","indigo"]]},{"id":"emeraude_ebene","name":"Émeraude et Ébène","gen":6,"pure":false,"colors":["emeraude","ebene"],"recipes":[["emeraude","ebene"]]},{"id":"emeraude_amande","name":"Émeraude et Amande","gen":6,"pure":false,"colors":["emeraude","amande"],"recipes":[["emeraude","amande"]]},{"id":"emeraude_roux","name":"Émeraude et Roux","gen":6,"pure":false,"colors":["emeraude","roux"],"recipes":[["emeraude","roux"]]},{"id":"emeraude_ivoire","name":"Émeraude et Ivoire","gen":6,"pure":false,"colors":["emeraude","ivoire"],"recipes":[["emeraude","ivoire"]]},{"id":"emeraude_turquoise","name":"Émeraude et Turquoise","gen":6,"pure":false,"colors":["emeraude","turquoise"],"recipes":[["emeraude","turquoise"]]},{"id":"dore","name":"Doré","gen":7,"pure":true,"colors":["dore"],"recipes":[["prune_pourpre","emeraude_roux"],["prune_orchidee","emeraude_turquoise"],["prune_indigo","emeraude_ivoire"],["prune_ebene","emeraude_amande"],["prune_amande","emeraude_ebene"],["prune_turquoise","emeraude_orchidee"],["emeraude_pourpre","prune_roux"],["emeraude_indigo","prune_ivoire"]]},{"id":"dore_pourpre","name":"Doré et Pourpre","gen":8,"pure":false,"colors":["dore","pourpre"],"recipes":[["dore","pourpre"]]},{"id":"dore_orchidee","name":"Doré et Orchidée","gen":8,"pure":false,"colors":["dore","orchidee"],"recipes":[["dore","orchidee"]]},{"id":"dore_indigo","name":"Doré et Indigo","gen":8,"pure":false,"colors":["dore","indigo"],"recipes":[["dore","indigo"]]},{"id":"dore_ebene","name":"Doré et Ébène","gen":8,"pure":false,"colors":["dore","ebene"],"recipes":[["dore","ebene"]]},{"id":"dore_roux","name":"Doré et Roux","gen":8,"pure":false,"colors":["dore","roux"],"recipes":[["dore","roux"]]},{"id":"dore_amande","name":"Doré et Amande","gen":8,"pure":false,"colors":["dore","amande"],"recipes":[["dore","amande"]]},{"id":"dore_ivoire","name":"Doré et Ivoire","gen":8,"pure":false,"colors":["dore","ivoire"],"recipes":[["dore","ivoire"]]},{"id":"dore_turquoise","name":"Doré et Turquoise","gen":8,"pure":false,"colors":["dore","turquoise"],"recipes":[["dore","turquoise"]]},{"id":"dore_prune","name":"Doré et Prune","gen":8,"pure":false,"colors":["dore","prune"],"recipes":[["dore","prune"]]},{"id":"dore_emeraude","name":"Doré et Émeraude","gen":8,"pure":false,"colors":["dore","emeraude"],"recipes":[["dore","emeraude"]]},{"id":"jade","name":"Jade","gen":9,"pure":true,"colors":["jade"],"recipes":[["prune_emeraude","dore_pourpre"],["dore_roux","dore_prune"]]},{"id":"rubis","name":"Rubis","gen":9,"pure":true,"colors":["rubis"],"recipes":[["prune_emeraude","dore_orchidee"],["dore_amande","dore_prune"]]},{"id":"saphir","name":"Saphir","gen":9,"pure":true,"colors":["saphir"],"recipes":[["prune_emeraude","dore_indigo"],["dore_turquoise","dore_emeraude"]]},{"id":"amethyste","name":"Améthyste","gen":9,"pure":true,"colors":["amethyste"],"recipes":[["prune_emeraude","dore_ebene"],["dore_ivoire","dore_emeraude"]]},{"id":"jade_pourpre","name":"Jade et Pourpre","gen":10,"pure":false,"colors":["jade","pourpre"],"recipes":[["jade","pourpre"]]},{"id":"jade_orchidee","name":"Jade et Orchidée","gen":10,"pure":false,"colors":["jade","orchidee"],"recipes":[["jade","orchidee"]]},{"id":"jade_indigo","name":"Jade et Indigo","gen":10,"pure":false,"colors":["jade","indigo"],"recipes":[["jade","indigo"]]},{"id":"jade_ebene","name":"Jade et Ébène","gen":10,"pure":false,"colors":["jade","ebene"],"recipes":[["jade","ebene"]]},{"id":"jade_amande","name":"Jade et Amande","gen":10,"pure":false,"colors":["jade","amande"],"recipes":[["jade","amande"]]},{"id":"jade_roux","name":"Jade et Roux","gen":10,"pure":false,"colors":["jade","roux"],"recipes":[["jade","roux"]]},{"id":"jade_ivoire","name":"Jade et Ivoire","gen":10,"pure":false,"colors":["jade","ivoire"],"recipes":[["jade","ivoire"]]},{"id":"jade_turquoise","name":"Jade et Turquoise","gen":10,"pure":false,"colors":["jade","turquoise"],"recipes":[["jade","turquoise"]]},{"id":"jade_prune","name":"Jade et Prune","gen":10,"pure":false,"colors":["jade","prune"],"recipes":[["jade","prune"]]},{"id":"jade_emeraude","name":"Jade et Émeraude","gen":10,"pure":false,"colors":["jade","emeraude"],"recipes":[["jade","emeraude"]]},{"id":"jade_dore","name":"Jade et Doré","gen":10,"pure":false,"colors":["jade","dore"],"recipes":[["jade","dore"]]},{"id":"jade_rubis","name":"Jade et Rubis","gen":10,"pure":false,"colors":["jade","rubis"],"recipes":[["jade","rubis"]]},{"id":"jade_saphir","name":"Jade et Saphir","gen":10,"pure":false,"colors":["jade","saphir"],"recipes":[["jade","saphir"]]},{"id":"jade_amethyste","name":"Jade et Améthyste","gen":10,"pure":false,"colors":["jade","amethyste"],"recipes":[["jade","amethyste"]]},{"id":"rubis_pourpre","name":"Rubis et Pourpre","gen":10,"pure":false,"colors":["rubis","pourpre"],"recipes":[["rubis","pourpre"]]},{"id":"rubis_orchidee","name":"Rubis et Orchidée","gen":10,"pure":false,"colors":["rubis","orchidee"],"recipes":[["rubis","orchidee"]]},{"id":"rubis_indigo","name":"Rubis et Indigo","gen":10,"pure":false,"colors":["rubis","indigo"],"recipes":[["rubis","indigo"]]},{"id":"rubis_ebene","name":"Rubis et Ébène","gen":10,"pure":false,"colors":["rubis","ebene"],"recipes":[["rubis","ebene"]]},{"id":"rubis_amande","name":"Rubis et Amande","gen":10,"pure":false,"colors":["rubis","amande"],"recipes":[["rubis","amande"]]},{"id":"rubis_roux","name":"Rubis et Roux","gen":10,"pure":false,"colors":["rubis","roux"],"recipes":[["rubis","roux"]]},{"id":"rubis_ivoire","name":"Rubis et Ivoire","gen":10,"pure":false,"colors":["rubis","ivoire"],"recipes":[["rubis","ivoire"]]},{"id":"rubis_turquoise","name":"Rubis et Turquoise","gen":10,"pure":false,"colors":["rubis","turquoise"],"recipes":[["rubis","turquoise"]]},{"id":"rubis_prune","name":"Rubis et Prune","gen":10,"pure":false,"colors":["rubis","prune"],"recipes":[["rubis","prune"]]},{"id":"rubis_emeraude","name":"Rubis et Émeraude","gen":10,"pure":false,"colors":["rubis","emeraude"],"recipes":[["rubis","emeraude"]]},{"id":"rubis_dore","name":"Rubis et Doré","gen":10,"pure":false,"colors":["rubis","dore"],"recipes":[["rubis","dore"]]},{"id":"rubis_saphir","name":"Rubis et Saphir","gen":10,"pure":false,"colors":["rubis","saphir"],"recipes":[["rubis","saphir"]]},{"id":"rubis_amethyste","name":"Rubis et Améthyste","gen":10,"pure":false,"colors":["rubis","amethyste"],"recipes":[["rubis","amethyste"]]},{"id":"saphir_pourpre","name":"Saphir et Pourpre","gen":10,"pure":false,"colors":["saphir","pourpre"],"recipes":[["saphir","pourpre"]]},{"id":"saphir_orchidee","name":"Saphir et Orchidée","gen":10,"pure":false,"colors":["saphir","orchidee"],"recipes":[["saphir","orchidee"]]},{"id":"saphir_indigo","name":"Saphir et Indigo","gen":10,"pure":false,"colors":["saphir","indigo"],"recipes":[["saphir","indigo"]]},{"id":"saphir_ebene","name":"Saphir et Ébène","gen":10,"pure":false,"colors":["saphir","ebene"],"recipes":[["saphir","ebene"]]},{"id":"saphir_amande","name":"Saphir et Amande","gen":10,"pure":false,"colors":["saphir","amande"],"recipes":[["saphir","amande"]]},{"id":"saphir_roux","name":"Saphir et Roux","gen":10,"pure":false,"colors":["saphir","roux"],"recipes":[["saphir","roux"]]},{"id":"saphir_ivoire","name":"Saphir et Ivoire","gen":10,"pure":false,"colors":["saphir","ivoire"],"recipes":[["saphir","ivoire"]]},{"id":"saphir_turquoise","name":"Saphir et Turquoise","gen":10,"pure":false,"colors":["saphir","turquoise"],"recipes":[["saphir","turquoise"]]},{"id":"saphir_prune","name":"Saphir et Prune","gen":10,"pure":false,"colors":["saphir","prune"],"recipes":[["saphir","prune"]]},{"id":"saphir_emeraude","name":"Saphir et Émeraude","gen":10,"pure":false,"colors":["saphir","emeraude"],"recipes":[["saphir","emeraude"]]},{"id":"saphir_dore","name":"Saphir et Doré","gen":10,"pure":false,"colors":["saphir","dore"],"recipes":[["saphir","dore"]]},{"id":"saphir_amethyste","name":"Saphir et Améthyste","gen":10,"pure":false,"colors":["saphir","amethyste"],"recipes":[["saphir","amethyste"]]},{"id":"amethyste_pourpre","name":"Améthyste et Pourpre","gen":10,"pure":false,"colors":["amethyste","pourpre"],"recipes":[["amethyste","pourpre"]]},{"id":"amethyste_orchidee","name":"Améthyste et Orchidée","gen":10,"pure":false,"colors":["amethyste","orchidee"],"recipes":[["amethyste","orchidee"]]},{"id":"amethyste_indigo","name":"Améthyste et Indigo","gen":10,"pure":false,"colors":["amethyste","indigo"],"recipes":[["amethyste","indigo"]]},{"id":"amethyste_ebene","name":"Améthyste et Ébène","gen":10,"pure":false,"colors":["amethyste","ebene"],"recipes":[["amethyste","ebene"]]},{"id":"amethyste_amande","name":"Améthyste et Amande","gen":10,"pure":false,"colors":["amethyste","amande"],"recipes":[["amethyste","amande"]]},{"id":"amethyste_roux","name":"Améthyste et Roux","gen":10,"pure":false,"colors":["amethyste","roux"],"recipes":[["amethyste","roux"]]},{"id":"amethyste_ivoire","name":"Améthyste et Ivoire","gen":10,"pure":false,"colors":["amethyste","ivoire"],"recipes":[["amethyste","ivoire"]]},{"id":"amethyste_turquoise","name":"Améthyste et Turquoise","gen":10,"pure":false,"colors":["amethyste","turquoise"],"recipes":[["amethyste","turquoise"]]},{"id":"amethyste_prune","name":"Améthyste et Prune","gen":10,"pure":false,"colors":["amethyste","prune"],"recipes":[["amethyste","prune"]]},{"id":"amethyste_emeraude","name":"Améthyste et Émeraude","gen":10,"pure":false,"colors":["amethyste","emeraude"],"recipes":[["amethyste","emeraude"]]},{"id":"amethyste_dore","name":"Améthyste et Doré","gen":10,"pure":false,"colors":["amethyste","dore"],"recipes":[["amethyste","dore"]]}]}</script>
+<script>
+(() => {
+  const DATA = JSON.parse(document.getElementById("mount-data").textContent);
+  const FAMILIES = {
+    dragodinde: { label: "Dragodindes", where: "Dragodindes sauvages : Amande, Dorée et Rousse." },
+    muldo: { label: "Muldos", where: "Muldos niveau 60 au Bassin des Muldos, au nord de Sufokia." },
+    volkorne: { label: "Volkornes", where: "Volkornes niveau 60 au Haras de Brâkmar, au sud de Brâkmar." },
+  };
+  const HUES = {
+    rousse: "#c4622d", roux: "#c4622d", doree: "#e2b53e", dore: "#e2b53e", amande: "#e9d7ad", indigo: "#38418f",
+    ebene: "#2b2522", pourpre: "#7c2b59", orchidee: "#c97dbd", ivoire: "#f4eedc", turquoise: "#36b5ad",
+    emeraude: "#25965a", prune: "#5a2448", jade: "#58b085", rubis: "#b01f3a", saphir: "#2050a8",
+    amethyste: "#8c5ec6", ambre: "#d98a1c", corail: "#f2785c", azur: "#3c9fe6", aigue_marine: "#86dccd",
+  };
+  const STORE_KEY = "registre-gen10-v1";
+  const fmt0 = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+  const fmt1 = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
+  const up = (x) => fmt0.format(Math.ceil(x - 1e-9));
+
+  const defaults = () => ({
+    family: "dragodinde", level: 100, opti: false, optiVal: 20, takeza: false, clone: true,
+    genMin: 2, genMax: 10, openGen: null, showStock: false,
+    born: { dragodinde: {}, muldo: {}, volkorne: {} }, stock: { dragodinde: {}, muldo: {}, volkorne: {} },
+  });
+  let state = defaults();
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    if (saved) state = { ...state, ...saved, born: { ...state.born, ...saved.born }, stock: { ...state.stock, ...saved.stock } };
+  } catch (e) { /* stockage indisponible : valeurs par défaut */ }
+  const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} };
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const index = {};
+  for (const fam of Object.keys(DATA)) index[fam] = Object.fromEntries(DATA[fam].map((m) => [m.id, m]));
+  const nameOf = (fam, id) => index[fam][id].name;
+  const swatch = (m) => {
+    const [a, b] = m.colors.map((c) => HUES[c] || "#888");
+    return `<span class="sw" style="background:${b ? `linear-gradient(135deg, ${a} 0 50%, ${b} 50% 100%)` : a}" aria-hidden="true"></span>`;
+  };
+  const genList = (fam, g) => DATA[fam].filter((m) => m.gen === g).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  const bornCount = (fam, g) => genList(fam, g).filter((m) => state.born[fam][m.id]).length;
+  const firstOpenGen = (fam) => { for (let g = 2; g <= 10; g++) if (bornCount(fam, g) < genList(fam, g).length) return g; return null; };
+
+  function odds(s = state) {
+    const lvl = 0.15 * s.level * 2, opti = s.opti ? Number(s.optiVal) : 0, tak = s.takeza ? 20 : 0;
+    return { lvl, opti, tak, raw: 30 + lvl + opti + tak, p: Math.min(100, 30 + lvl + opti + tak) / 100 };
+  }
+
+  // Planificateur : remonte la demande de la génération 10 vers la génération 1.
+  function plan(fam, s = state) {
+    const mounts = DATA[fam], born = s.born[fam], stock = s.stock[fam];
+    const { p } = odds(s);
+    const reuse = s.clone ? 0.5 : 1;
+    const unit = {};
+    for (const m of [...mounts].sort((a, b) => a.gen - b.gen)) {
+      unit[m.id] = m.gen === 1 ? 1 : Math.min(...m.recipes.map(([a, b]) => (unit[a] + unit[b]) * reuse / p));
+    }
+    const need = {};
+    for (const m of mounts) if (m.gen >= 2 && m.gen >= s.genMin && m.gen <= s.genMax && !born[m.id]) need[m.id] = 1;
+    const demand = {};
+    const st = (id) => Math.max(0, Number(stock[id]) || 0);
+    const births = (id, d) => Math.max(need[id] || 0, d - st(id));
+    const marginal = (id, add) => unit[id] * (births(id, (demand[id] || 0) + add) - births(id, demand[id] || 0));
+    const result = {};
+    for (let g = 10; g >= 2; g--) {
+      for (const m of mounts.filter((x) => x.gen === g)) {
+        const nb = births(m.id, demand[m.id] || 0);
+        if (nb <= 1e-9) continue;
+        let left = nb / p;
+        const alloc = m.recipes.map(() => 0);
+        while (left > 1e-9) {
+          const u = Math.min(1, left);
+          let best = 0, bestCost = Infinity;
+          m.recipes.forEach(([a, b], i) => {
+            const cost = marginal(a, u * reuse) + marginal(b, u * reuse);
+            if (cost < bestCost - 1e-9) { bestCost = cost; best = i; }
+          });
+          const [a, b] = m.recipes[best];
+          demand[a] = (demand[a] || 0) + u * reuse;
+          demand[b] = (demand[b] || 0) + u * reuse;
+          alloc[best] += u;
+          left -= u;
+        }
+        result[m.id] = { births: nb, breedings: nb / p, alloc };
+      }
+    }
+    for (const id of Object.keys(result)) result[id].asParent = demand[id] || 0;
+    const captures = mounts.filter((m) => m.gen === 1)
+      .map((m) => ({ m, n: Math.max(0, (demand[m.id] || 0) - st(m.id)) })).filter((c) => c.n > 1e-9);
+    let totalBreed = 0, newOnes = 0;
+    for (const [id, r] of Object.entries(result)) { totalBreed += r.breedings; if (!born[id]) newOnes++; }
+    return { result, captures, totalBreed, newOnes, p, totalCaptures: captures.reduce((s2, c) => s2 + Math.ceil(c.n - 1e-9), 0) };
+  }
+
+  /* ---------- 1. Familles ---------- */
+  function renderFamilies() {
+    $("families").innerHTML = Object.entries(FAMILIES).map(([k, f]) => {
+      const all = DATA[k].filter((m) => m.gen >= 2), n = all.filter((m) => state.born[k][m.id]).length;
+      return `<button type="button" class="fam" data-fam="${k}" aria-pressed="${state.family === k}">
+        <span class="t">${f.label}</span>
+        <span class="small muted"><span class="num">${n} / ${all.length}</span> montures nées</span>
+        <span class="bar ${n === all.length ? "good" : ""}"><i style="width:${(n / all.length) * 100}%"></i></span>
+      </button>`;
+    }).join("");
+  }
+
+  /* ---------- 2. Progression ---------- */
+  function renderProgress() {
+    const fam = state.family, f = FAMILIES[fam];
+    const open = state.openGen;
+    let html = `<div class="row" style="justify-content:space-between">
+      <span class="small muted">Raccourci : si tu as déjà bouclé des générations entières, coche-les d'un coup.</span>
+      <span class="row"><label for="upTo" class="small">J'ai tout fait naître jusqu'à la</label>
+        <select id="upTo"><option value="1">aucune</option>${Array.from({ length: 9 }, (_, i) => i + 2).map((g) => `<option value="${g}">génération ${g}</option>`).join("")}</select>
+        <button type="button" class="btn small" data-act="upto">Cocher</button></span>
+    </div>
+    <div class="ladder">${Array.from({ length: 9 }, (_, i) => i + 2).map((g) => {
+      const tot = genList(fam, g).length, n = bornCount(fam, g);
+      return `<button type="button" class="rung ${n === tot ? "done" : ""}" data-gen="${g}" aria-expanded="${open === g}">
+        <span class="g">Gén. ${g}</span><span class="c num">${n === tot ? "✓ complète" : `${n} / ${tot}`}</span>
+        <span class="bar ${n === tot ? "good" : ""}"><i style="width:${(n / tot) * 100}%"></i></span></button>`;
+    }).join("")}</div>`;
+    if (open) {
+      const list = genList(fam, open), all = list.every((m) => state.born[fam][m.id]);
+      html += `<div class="row" style="justify-content:space-between">
+          <h3>Génération ${open} · ${f.label}</h3>
+          <span class="row"><button type="button" class="btn small" data-act="gen-all" data-gen="${open}">${all ? "Tout décocher" : "Tout cocher"}</button>
+          <button type="button" class="btn small" data-act="close">Fermer</button></span></div>
+        <div class="cards">${list.map((m) => {
+          const b = !!state.born[fam][m.id];
+          return `<button type="button" class="card" data-born="${m.id}" aria-pressed="${b}">${swatch(m)}<span class="nm">${esc(m.name)}</span><span class="box" aria-hidden="true">${b ? "✓" : ""}</span></button>`;
+        }).join("")}</div>`;
+    } else {
+      html += `<p class="small muted">Clique sur une génération ci-dessus pour cocher ses montures une par une.</p>`;
+    }
+    html += `<details class="more" ${state.showStock ? "open" : ""} id="stockDetails"><summary>J'ai déjà des montures fertiles en réserve (optionnel)</summary>
+      <div style="display:grid;gap:10px;margin-top:12px">
+        <p class="small muted">Indique les montures fertiles que tu possèdes déjà : le plan les utilisera comme parents et te demandera moins de captures et d'accouplements.</p>
+        ${Array.from({ length: 10 }, (_, i) => i + 1).map((g) => `<div style="display:grid;gap:6px"><span class="eyebrow">Génération ${g}</span><div class="cards">${genList(fam, g).map((m) =>
+          `<label class="stockcard">${swatch(m)}<span class="small">${esc(m.name)}</span><input type="number" min="0" step="1" id="stock-${fam}-${m.id}" data-stock="${m.id}" value="${Number(state.stock[fam][m.id]) || 0}" aria-label="Stock ${esc(m.name)}"></label>`).join("")}</div></div>`).join("")}
+      </div></details>`;
+    $("progress").innerHTML = html;
+  }
+
+  /* ---------- 3. Conditions ---------- */
+  function renderConditions() {
+    const o = odds();
+    const presets = [[1, "Bébés (niv. 1)"], [60, "Niv. 60"], [100, "Niv. 100"], [150, "Niv. 150"], [200, "Niv. 200"]];
+    const inTen = Math.round(o.p * 10);
+    $("conditions").innerHTML = `
+      <div class="odds">
+        <span class="big num">${fmt1.format(o.p * 100)} %</span>
+        <span><b>de chances que le bébé ait la nouvelle couleur</b> (la « génération cible »).<br>
+        <span class="small">Soit environ ${inTen} bébé${inTen > 1 ? "s" : ""} réussi${inTen > 1 ? "s" : ""} sur 10. En cas d'échec, le bébé reprend une couleur de ses parents ou grands-parents.</span></span>
+      </div>
+      <div style="display:grid;gap:8px">
+        <label for="level"><b>Niveau moyen de tes parents : <span class="num">${state.level}</span></b></label>
+        <div class="presets">${presets.map(([v, l]) => `<button type="button" data-level="${v}" aria-pressed="${state.level === v}">${l}</button>`).join("")}</div>
+        <input type="range" id="level" min="1" max="200" step="1" value="${state.level}">
+        <span class="small muted">Une monture gagne des niveaux dans l'enclos avec la jauge d'expérience. Compte environ 12 h pour le niveau 100.</span>
+      </div>
+      <div class="grid2">
+        <label class="check" for="opti"><input type="checkbox" id="opti" ${state.opti ? "checked" : ""}>
+          <span><b>J'utilise une Optimakina</b><span class="small muted">+${state.optiVal} % de chances. Il en faut une par accouplement, de génération égale ou supérieure au bébé.</span></span></label>
+        <label class="check" for="takeza"><input type="checkbox" id="takeza" ${state.takeza ? "checked" : ""}>
+          <span><b>C'est le jour Almanax de Takeza</b><span class="small muted">+20 % de chances ce jour-là uniquement.</span></span></label>
+      </div>
+      <details class="adv"><summary>Réglages avancés</summary>
+        <div class="grid2">
+          <label class="check" for="clone"><input type="checkbox" id="clone" ${state.clone ? "checked" : ""}>
+            <span><b>Je recycle les parents stériles par clonage</b><span class="small muted">Deux stériles de même génération donnent une monture fertile. Cela divise environ par deux le nombre de parents à produire.</span></span></label>
+          <div style="display:grid;gap:6px">
+            <b>Générations à viser</b>
+            <span class="row small"><label for="genMin">de la</label><select id="genMin">${genOpts(state.genMin)}</select>
+              <label for="genMax">à la</label><select id="genMax">${genOpts(state.genMax)}</select></span>
+            <span class="small muted">Par défaut, toutes. Choisis 10 à 10 pour ne viser que le succès de génération 10.</span>
+          </div>
+          <label class="row small" for="optiVal">Bonus de l'Optimakina
+            <select id="optiVal"><option value="20" ${state.optiVal == 20 ? "selected" : ""}>+20 % (depuis la 3.7)</option><option value="10" ${state.optiVal == 10 ? "selected" : ""}>+10 % (3.5 et 3.6)</option></select></label>
+        </div>
+      </details>`;
+  }
+  const genOpts = (sel) => Array.from({ length: 9 }, (_, i) => i + 2).map((g) => `<option value="${g}" ${g === sel ? "selected" : ""}>génération ${g}</option>`).join("");
+
+  /* ---------- 4. Plan ---------- */
+  function itemHtml(fam, m, r) {
+    const isNew = !state.born[fam][m.id];
+    const crosses = m.recipes.map((rc, i) => ({ rc, n: r.alloc[i] })).filter((c) => c.n > 1e-9);
+    const cross = crosses.length === 1
+      ? `Accouple <strong>${esc(nameOf(fam, crosses[0].rc[0]))} × ${esc(nameOf(fam, crosses[0].rc[1]))}</strong>, environ <strong>${up(r.breedings)} fois</strong>.`
+      : `Accouple, environ <strong>${up(r.breedings)} fois</strong> en tout : ${crosses.map((c) => `<strong>${esc(nameOf(fam, c.rc[0]))} × ${esc(nameOf(fam, c.rc[1]))}</strong> (${up(c.n)}×)`).join(", ")}.`;
+    const why = [];
+    if (isNew) why.push("le premier bébé valide le succès");
+    if (r.asParent > 1e-9) why.push(`${up(r.asParent)} serviront de parents ensuite`);
+    return `<div class="item">${swatch(m)}
+      <div class="what"><b>${esc(m.name)}</b>
+        <span class="how">${cross} Objectif : ${up(r.births)} bébé${Math.ceil(r.births - 1e-9) > 1 ? "s" : ""} (${why.join(", ")}).</span></div>
+      ${isNew ? `<button type="button" class="btn small primary" data-born="${m.id}">C'est né ✓</button>` : `<span class="small muted">déjà née</span>`}
+    </div>`;
+  }
+
+  function renderPlan() {
+    const fam = state.family, f = FAMILIES[fam];
+    const pl = plan(fam);
+    const el = $("plan");
+    const rows = Object.entries(pl.result).map(([id, r]) => ({ m: index[fam][id], r }));
+    if (!rows.length) {
+      el.innerHTML = `<div class="empty"><h3>Bravo, rien à faire naître ici !</h3>
+        <p>Les succès des générations ${state.genMin} à ${state.genMax} des ${f.label.toLowerCase()} sont bouclés d'après ton registre. Choisis une autre famille à l'étape 1.</p></div>`;
+      return;
+    }
+    let html = `<p class="summary">Il te reste <b>${pl.newOnes}</b> montures à faire naître pour les succès. Avec tes réglages, compte environ <b>${up(pl.totalBreed)}</b> accouplements et <b>${fmt0.format(pl.totalCaptures)}</b> captures.</p>`;
+    if (pl.p < 1) {
+      const best = plan(fam, { ...state, level: 200, opti: true, optiVal: 20 });
+      const gain = 1 - best.totalBreed / pl.totalBreed;
+      if (gain > 0.05) html += `<p class="hint small">Avec des parents niveau 200 et une Optimakina (100 % de réussite), il ne faudrait qu'environ <b class="num">${up(best.totalBreed)}</b> accouplements et <b class="num">${fmt0.format(best.totalCaptures)}</b> captures, soit ${Math.round(gain * 100)} % de travail en moins. Monter tes parents vaut le coup, surtout pour les générations 8 à 10.</p>`;
+    }
+    if (pl.captures.length) {
+      html += `<div class="panel"><div class="row" style="justify-content:space-between"><h3>Captures à prévoir</h3><span class="small muted">À faire au fil de l'eau, par vagues.</span></div>
+        <div class="chips">${pl.captures.map((c) => `<span class="chip">${swatch(c.m)}${esc(c.m.name)} <span class="num">× ${Math.ceil(c.n - 1e-9)}</span></span>`).join("")}</div>
+        <p class="small muted">${f.where} Il faut un filet équipé (fabriqué par le métier Éleveur) pour obtenir le sort de capture ; les filets multiplicateurs capturent plusieurs montures par combat.</p></div>`;
+    }
+    const gens = [...new Set(rows.map((x) => x.m.gen))].sort((a, b) => a - b);
+    gens.forEach((g, gi) => {
+      const list = rows.filter((x) => x.m.gen === g).sort((a, b) => a.m.name.localeCompare(b.m.name, "fr"));
+      const breed = list.reduce((s, x) => s + x.r.breedings, 0);
+      const fresh = list.filter((x) => !state.born[fam][x.m.id]).length;
+      const items = list.map(({ m, r }) => itemHtml(fam, m, r)).join("");
+      if (gi === 0) {
+        html += `<article class="next"><header><span class="badge">Prochaine étape</span>
+          <h3>Génération ${g} : ${list.length} sorte${list.length > 1 ? "s" : ""} de bébé à faire naître</h3>
+          <p class="small muted">Rends les parents féconds en enclos (endurance, maturité et amour à 20 000), puis accouple un mâle et une femelle depuis l'étable.${fresh ? ` ${fresh} de ces bébés valident un succès.` : ""}</p></header>
+          <div class="todo">${items}</div></article>`;
+      } else {
+        html += `<details class="later"><summary><span class="t">Génération ${g} : ${list.length} sorte${list.length > 1 ? "s" : ""} de bébé</span><span class="small muted">≈ ${up(breed)} accouplements${fresh ? ` · ${fresh} pour les succès` : ""}</span></summary>
+          <div class="todo">${items}</div></details>`;
+      }
+    });
+    html += `<p class="small muted">Les quantités sont des moyennes. Les bébés ratés ne sont pas comptés alors qu'ils servent souvent de parents ou de matière à cloner : en pratique, il t'en faudra un peu moins.</p>`;
+    el.innerHTML = html;
+  }
+
+  /* ---------- Mémo ---------- */
+  function renderMemo() {
+    const today = new Date();
+    const almanax = [
+      ["Janvier", "Jauge de maturité doublée"], ["Février", "Bébés : capacité Endurante"], ["Mars", "Jauge d'endurance doublée"],
+      ["Avril", "Perte de sérénité doublée"], ["Mai", "-15 % d'ingrédients en fabrication"], ["Juin", "Jauge d'expérience doublée"],
+      ["Juillet", "Bébés : capacité Amoureuse"], ["Août", "25 % de chance d'objet en plus"], ["Septembre", "Gain de sérénité doublé"],
+      ["Octobre", "Bébés : capacité Sage"], ["Novembre", "Bébés : capacité Précoce"], ["Décembre", "Jauge d'amour doublée"],
+    ];
+    const nextMonth = today.getDate() <= 10 ? today.getMonth() : (today.getMonth() + 1) % 12;
+    const genetons = [[1, 2], [2, 4], [3, 8], [4, 16], [5, 30], [6, 60], [7, 120], [8, 240], [9, 500]];
+    $("memo").innerHTML = `
+      <details class="panel"><summary class="linkish">Comment marche un accouplement ?</summary>
+        <ol>
+          <li>Capture des montures sauvages : elles sont directement de génération 1.</li>
+          <li>Place-les en enclos et remplis leurs jauges d'endurance, de maturité et d'amour jusqu'à 20 000 : elles deviennent fécondes.</li>
+          <li>À l'étable, accouple un mâle et une femelle féconds du même type. Le bébé naît tout de suite.</li>
+          <li>Si les parents correspondent à une recette, le bébé a une chance (affichée en jeu) d'être de la génération supérieure. Sinon, il reprend une couleur de ses parents ou grands-parents.</li>
+          <li>Les deux parents deviennent stériles. Clone deux stériles de même génération pour récupérer une monture fertile.</li>
+        </ol></details>
+      <details class="panel"><summary class="linkish">8 astuces pour aller plus vite</summary>
+        <ol class="tips">
+          <li><span><b>Monte les parents avant les croisements chers.</b> Deux parents niveau 100 donnent 60 %, niveau 200 donnent 90 %, et 100 % avec une Optimakina. Sur les étapes 8, 9 et 10, un échec coûte des dizaines de captures.</span></li>
+          <li><span><b>Varie les recettes des couleurs pures.</b> Muldos et Volkornes ont plusieurs croisements pour une même couleur pure : varier les bicolores fait naître des montures différentes, et chaque naissance coche un succès. Le plan le fait pour toi.</span></li>
+          <li><span><b>Ne jette pas les stériles.</b> Le clonage conserve genre, généalogie et sérénité ; seules les jauges repartent à zéro. Garde l'extraction pour les vrais surplus.</span></li>
+          <li><span><b>Garde les bébés ratés.</b> Ils reprennent une couleur de l'arbre : parent de rechange ou moitié de clone.</span></li>
+          <li><span><b>Équilibre les sexes.</b> Sur les couleurs rares, l'Animakina choisit le sexe du bébé.</span></li>
+          <li><span><b>Garde les accouplements de génération 9 et 10 pour Takeza.</b> +20 % de chances ce jour-là.</span></li>
+          <li><span><b>Remplis les jauges deux par deux.</b> Entre -2 000 et -1 de sérénité, la monture gagne endurance et maturité ; entre 0 et 2 000, maturité et amour.</span></li>
+          <li><span><b>Mets les Reproductrices sur les croisements chers.</b> Cette capacité (3 % à la naissance) donne un bébé de plus.</span></li>
+        </ol></details>
+      <details class="panel"><summary class="linkish">Ce qui a changé en 3.5, 3.6 et 3.7</summary>
+        <div class="grid2">
+          <div><h3>3.5 · Refonte</h3><ul>
+            <li>Les montures d'avant la 3.5 sont séniles : montables, mais ni accouplables ni clonables.</li>
+            <li>Capture directe en génération 1, plus de gestation ni de fatigue, un bébé par accouplement, parents stériles ensuite.</li>
+            <li>La généalogie s'arrête aux grands-parents.</li>
+            <li>Métier Éleveur : 6 enclos de 10 places, filets et carburants.</li>
+            <li>4 nouveaux Muldos de génération 9 (Ambre, Azur, Corail, Aigue-marine) : 54 montures ajoutées aux succès.</li>
+            <li>Les succès de génération commencent à la génération 2.</li>
+          </ul></div>
+          <div><h3>3.6 et 3.7</h3><ul>
+            <li>3.6 : nouvelle apparence des Muldos et Volkornes.</li>
+            <li>3.7 : jauges d'enclos doublées.</li>
+            <li>3.7 : Optimakina passée de +10 % à +20 %.</li>
+            <li>3.7 : icône des montures manquantes aux succès.</li>
+          </ul></div>
+        </div></details>
+      <details class="panel"><summary class="linkish">Tableaux : génétons et Almanax d'élevage</summary>
+        <div class="grid2">
+          <div><p class="small muted">Génétons gagnés par parent quand le bébé dépasse toute la généalogie.</p>
+            <div class="tbl-wrap"><table><thead><tr><th>Génération</th><th class="r">Génétons</th></tr></thead>
+            <tbody>${genetons.map(([g, n]) => `<tr><td>${g}</td><td class="r num">${n}</td></tr>`).join("")}</tbody></table></div></div>
+          <div><p class="small muted">Bonus du 10 de chaque mois. Takeza (+20 %) tombe à une date variable.</p>
+            <div class="tbl-wrap"><table><thead><tr><th>Mois</th><th>Effet</th></tr></thead>
+            <tbody>${almanax.map(([mo, fx], i) => `<tr class="${i === nextMonth ? "hl" : ""}"><td>${mo}</td><td>${fx}${i === nextMonth ? " · prochain" : ""}</td></tr>`).join("")}</tbody></table></div></div>
+        </div></details>
+      <details class="panel"><summary class="linkish">Sauvegarder ou transférer ma progression</summary>
+        <p class="small muted">Ta progression est enregistrée dans ce navigateur. Pour la passer sur un autre appareil, copie ce code puis colle-le là-bas et clique sur « Importer ».</p>
+        <textarea id="saveCode" spellcheck="false" aria-label="Code de sauvegarde"></textarea>
+        <div class="row"><button type="button" class="btn small" data-act="copy">Copier</button><button type="button" class="btn small" data-act="import">Importer</button><span class="small muted" id="saveMsg"></span></div>
+      </details>
+      <details class="panel"><summary class="linkish">Sources</summary><ul>
+        <li><a href="https://www.dofuspourlesnoobs.com/guide-de-l-eleveur.html" target="_blank" rel="noopener">Guide de l'éleveur, édition 2026</a></li>
+        <li><a href="https://www.dofuspourlesnoobs.com/mise-a-jour-305.html" target="_blank" rel="noopener">Présentation de la mise à jour 3.5</a></li>
+        <li><a href="https://dragodinde.fr/" target="_blank" rel="noopener">dragodinde.fr</a> (recettes) et <a href="https://dofusdb.fr/fr/tools/breeding/crossing/dragodinde" target="_blank" rel="noopener">DofusDB</a> (noms)</li>
+      </ul></details>`;
+    $("saveCode").value = JSON.stringify({ born: state.born, stock: state.stock });
+  }
+
+  /* ---------- Rendu et événements ---------- */
+  function render() {
+    renderFamilies(); renderProgress(); renderConditions(); renderPlan();
+    const code = $("saveCode");
+    if (code) code.value = JSON.stringify({ born: state.born, stock: state.stock });
+  }
+  const update = () => { save(); render(); };
+
+  let toastTimer = null, undo = null;
+  function toast(msg, undoFn) {
+    const t = $("toast");
+    undo = undoFn;
+    t.innerHTML = `<span>${esc(msg)}</span>${undoFn ? '<button type="button" data-act="undo">Annuler</button>' : ""}`;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 5000);
+  }
+  $("toast").addEventListener("click", (e) => {
+    if (e.target.closest("[data-act=undo]") && undo) { undo(); undo = null; $("toast").hidden = true; }
+  });
+
+  function toggleBorn(id, fromPlan) {
+    const fam = state.family, m = index[fam][id];
+    const wasBorn = !!state.born[fam][id];
+    if (wasBorn) delete state.born[fam][id]; else state.born[fam][id] = true;
+    update();
+    if (fromPlan) toast(`${m.name} cochée comme née.`, () => { delete state.born[fam][id]; update(); });
+  }
+
+  document.addEventListener("click", (e) => {
+    const famBtn = e.target.closest("[data-fam]");
+    if (famBtn) { state.family = famBtn.dataset.fam; state.openGen = firstOpenGen(state.family); return update(); }
+    const bornBtn = e.target.closest("[data-born]");
+    if (bornBtn) return toggleBorn(bornBtn.dataset.born, !!bornBtn.closest("#plan"));
+    const gen = e.target.closest(".rung[data-gen]");
+    if (gen) { const g = Number(gen.dataset.gen); state.openGen = state.openGen === g ? null : g; return update(); }
+    const lvl = e.target.closest("[data-level]");
+    if (lvl) { state.level = Number(lvl.dataset.level); return update(); }
+    const a = e.target.closest("[data-act]");
+    if (!a) return;
+    const fam = state.family;
+    switch (a.dataset.act) {
+      case "upto": {
+        const g = Number($("upTo").value);
+        const before = JSON.parse(JSON.stringify(state.born[fam]));
+        DATA[fam].forEach((m) => { if (m.gen >= 2 && m.gen <= g) state.born[fam][m.id] = true; });
+        state.openGen = firstOpenGen(fam);
+        update();
+        if (g >= 2) toast(`Générations 2 à ${g} cochées.`, () => { state.born[fam] = before; update(); });
+        break;
+      }
+      case "gen-all": {
+        const list = genList(fam, Number(a.dataset.gen)), all = list.every((m) => state.born[fam][m.id]);
+        list.forEach((m) => { if (all) delete state.born[fam][m.id]; else state.born[fam][m.id] = true; });
+        update(); break;
+      }
+      case "close": state.openGen = null; update(); break;
+      case "copy": {
+        const ta = $("saveCode");
+        navigator.clipboard.writeText(ta.value).then(() => { $("saveMsg").textContent = "Code copié."; })
+          .catch(() => { ta.select(); $("saveMsg").textContent = "Copie bloquée : le code est sélectionné, fais Ctrl+C."; });
+        break;
+      }
+      case "import": {
+        try {
+          const v = JSON.parse($("saveCode").value);
+          if (!v.born || !v.stock) throw new Error("format");
+          state.born = { ...defaults().born, ...v.born }; state.stock = { ...defaults().stock, ...v.stock };
+          update(); renderMemo(); $("saveMsg").textContent = "Progression importée.";
+        } catch (err) {
+          $("saveMsg").textContent = "Code illisible : colle le code complet copié depuis un autre navigateur.";
+        }
+        break;
+      }
+    }
+  });
+
+  document.addEventListener("input", (e) => {
+    if (e.target.id === "level") {
+      state.level = Number(e.target.value);
+      save(); renderPlan();
+      // Mise à jour légère pour ne pas casser le glissement du curseur.
+      const o = odds();
+      document.querySelector("#conditions .big").textContent = `${fmt1.format(o.p * 100)} %`;
+      document.querySelector('label[for="level"] .num').textContent = state.level;
+      document.querySelectorAll("[data-level]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.level) === state.level)));
+    }
+  });
+  document.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.id === "level") return renderConditions();
+    if (["opti", "takeza", "clone"].includes(t.id)) { state[t.id] = t.checked; return update(); }
+    if (t.id === "optiVal") { state.optiVal = Number(t.value); return update(); }
+    if (t.id === "genMin") { state.genMin = Number(t.value); if (state.genMax < state.genMin) state.genMax = state.genMin; return update(); }
+    if (t.id === "genMax") { state.genMax = Number(t.value); if (state.genMin > state.genMax) state.genMin = state.genMax; return update(); }
+    const s = t.closest("[data-stock]");
+    if (s) {
+      const v = Math.max(0, Math.floor(Number(s.value) || 0));
+      if (v) state.stock[state.family][s.dataset.stock] = v; else delete state.stock[state.family][s.dataset.stock];
+      save(); renderPlan();
+    }
+  });
+  document.addEventListener("toggle", (e) => {
+    if (e.target.id === "stockDetails") { state.showStock = e.target.open; save(); }
+  }, true);
+
+  if (state.openGen == null) state.openGen = firstOpenGen(state.family);
+  render();
+  renderMemo();
+})();
+</script>
