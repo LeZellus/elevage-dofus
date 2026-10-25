@@ -3,252 +3,326 @@
 <meta name="description" content="Planificateur d'élevage Dofus 3.7 : dragodindes, muldos et volkornes jusqu'aux succès de génération 10.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@700;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@700;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* Layout : un parcours en 4 étapes numérotées sur une seule colonne, la prochaine action toujours mise en avant. */
+/* Layout : barre de familles fixe, bandeau « où j'en suis », puis 3 étapes aérées (cocher → régler → suivre le plan) et l'aide en accordéons. */
 :root {
-  --bg: #eef0e8;
-  --surface: #f9faf5;
-  --sunken: #e3e6db;
-  --ink: #1f2a22;
-  --muted: #5d6a5f;
-  --line: #cdd3c4;
-  --accent: #9a5b12;
+  --bg: #f2f4ee;
+  --surface: #fcfdf9;
+  --sunken: #e7eae1;
+  --ink: #1d2620;
+  --muted: #5f6b62;
+  --line: #d7dccf;
+  --accent: #a3600f;
   --accent-ink: #ffffff;
-  --accent-soft: #f1dfc2;
-  --good: #2f7a4a;
-  --good-soft: #d6ead9;
+  --accent-soft: #f6e7cf;
+  --good: #2b7747;
+  --good-soft: #dcefe1;
+  --info: #2c6a9a;
+  --rare: #7a4da6;
   --font-display: "Alegreya", Georgia, "Times New Roman", serif;
   --font-body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  --radius: 12px;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 72px;
+  --radius: 14px; --radius-sm: 9px;
+  --shadow: 0 1px 2px rgb(29 38 32 / .06), 0 4px 16px rgb(29 38 32 / .05);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141b16; --surface: #1b241e; --sunken: #111712; --ink: #e4e9df; --muted: #9aa79b;
-    --line: #2f3b32; --accent: #e3a548; --accent-ink: #1b1408; --accent-soft: #3a2c16; --good: #6cc48b; --good-soft: #1c3324;
+    --bg: #121814; --surface: #1a221d; --sunken: #0f1411; --ink: #e6ebe3; --muted: #9ba89e; --line: #2c3830;
+    --accent: #e8a94e; --accent-ink: #1a1307; --accent-soft: #382a15; --good: #6dc58c; --good-soft: #1b3324;
+    --info: #6fb0e0; --rare: #b993e0; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 6px 20px rgb(0 0 0 / .25);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141b16; --surface: #1b241e; --sunken: #111712; --ink: #e4e9df; --muted: #9aa79b;
-  --line: #2f3b32; --accent: #e3a548; --accent-ink: #1b1408; --accent-soft: #3a2c16; --good: #6cc48b; --good-soft: #1c3324;
+  --bg: #121814; --surface: #1a221d; --sunken: #0f1411; --ink: #e6ebe3; --muted: #9ba89e; --line: #2c3830;
+  --accent: #e8a94e; --accent-ink: #1a1307; --accent-soft: #382a15; --good: #6dc58c; --good-soft: #1b3324;
+  --info: #6fb0e0; --rare: #b993e0; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 6px 20px rgb(0 0 0 / .25);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-body {
-  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.5;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 28px 64px;
-}
-.wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 36px; }
+html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55; margin: 0; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1000px; margin: 0 auto; }
 h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
-h1 { font-size: clamp(2.1rem, 5vw, 3rem); font-weight: 800; }
-h2 { font-size: 1.55rem; font-weight: 800; }
-h3 { font-size: 1.15rem; font-weight: 700; }
+h1 { font-size: clamp(2rem, 5vw, 2.9rem); font-weight: 800; }
+h2 { font-size: clamp(1.5rem, 3.4vw, 1.9rem); font-weight: 800; }
+h3 { font-size: 1.2rem; font-weight: 700; }
 p { margin: 0; }
 a { color: var(--accent); }
-.eyebrow { font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 700; }
+.eyebrow { font-size: .76rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 700; }
 .num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
-.small { font-size: .88rem; }
+.small { font-size: .9rem; }
 button, input, select { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-header.top { display: grid; gap: 8px; max-width: 64ch; }
-header.top p { color: var(--muted); font-size: 1.05rem; }
-
-/* Étapes */
-.step { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 16px; }
-.step > .n {
-  width: 44px; height: 44px; border-radius: 50%; background: var(--ink); color: var(--bg);
-  display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 1.3rem;
-}
-.step > .body { display: grid; gap: 16px; min-width: 0; }
-.step-head { display: grid; gap: 4px; padding-top: 6px; }
-.step-head p { color: var(--muted); max-width: 68ch; }
-@media (max-width: 560px) {
-  .step { grid-template-columns: minmax(0, 1fr); }
-  .step > .n { width: 36px; height: 36px; font-size: 1.1rem; }
-}
-
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 14px; }
-.row { display: flex; gap: 8px 12px; align-items: center; flex-wrap: wrap; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 .btn {
-  border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 700;
+  display: inline-flex; align-items: center; gap: var(--s2); border: 1px solid var(--line); background: var(--surface);
+  border-radius: 999px; padding: 9px 18px; cursor: pointer; font-weight: 700; text-decoration: none; color: var(--ink);
+  transition: border-color .15s, background .15s;
 }
 .btn:hover { border-color: var(--accent); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.btn.small { padding: 4px 10px; font-size: .85rem; }
-.linkish { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.sm { padding: 6px 14px; font-size: .9rem; }
+.btn.ghost { background: transparent; }
+.row { display: flex; gap: var(--s3); align-items: center; flex-wrap: wrap; }
+.between { justify-content: space-between; }
 
-/* 1. Familles */
-.families { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-@media (max-width: 560px) { .families { grid-template-columns: minmax(0, 1fr); } }
-.fam {
-  border: 2px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 14px 16px; cursor: pointer;
-  display: grid; gap: 8px; text-align: left;
+/* Barre du haut */
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: var(--s3) var(--s5); padding-block: var(--s3); flex-wrap: wrap; }
+.brand { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; white-space: nowrap; }
+.brand span { color: var(--accent); }
+.seg { display: flex; gap: var(--s1); padding: var(--s1); background: var(--sunken); border-radius: 999px; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; border-radius: 999px; padding: 7px 16px; cursor: pointer; font-weight: 700; display: inline-flex; gap: var(--s2); align-items: baseline; }
+.seg button .num { font-size: .78rem; color: var(--muted); font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--accent); box-shadow: var(--shadow); }
+@media (max-width: 560px) { .brand { display: none; } .seg { width: 100%; } .seg button { flex: 1; justify-content: center; padding: 7px 8px; } }
+
+main .wrap { display: grid; gap: var(--s8); padding-block: var(--s7) var(--s8); }
+
+/* Bandeau d'accueil */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s6); align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 6px); padding: var(--s6); box-shadow: var(--shadow); }
+.hero .txt { display: grid; gap: var(--s3); min-width: 0; }
+.hero .lead { font-size: 1.12rem; max-width: 56ch; }
+.hero .actions { display: flex; gap: var(--s3); flex-wrap: wrap; margin-top: var(--s2); }
+.ring { width: 150px; height: 150px; position: relative; flex: none; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring .track { stroke: var(--sunken); }
+.ring .val { stroke: var(--accent); transition: stroke-dashoffset .4s ease; }
+.ring.full .val { stroke: var(--good); }
+.ring .lbl { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.ring .lbl b { font-family: var(--font-display); font-size: 2rem; font-weight: 800; line-height: 1; }
+.ring .lbl span { font-size: .8rem; color: var(--muted); }
+@media (max-width: 640px) { .hero { grid-template-columns: minmax(0, 1fr); padding: var(--s5); } .ring { width: 120px; height: 120px; order: -1; } }
+.howto { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); margin-top: calc(var(--s5) * -1 - var(--s4)); }
+.howto a { display: flex; gap: var(--s3); align-items: center; text-decoration: none; color: var(--ink); padding: var(--s3) var(--s4); border-radius: var(--radius-sm); }
+.howto a:hover { background: var(--surface); }
+.howto .k { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); font-weight: 800; flex: none; font-family: var(--font-display); }
+.howto a.done .k { background: var(--good); color: var(--surface); }
+@media (max-width: 640px) { .howto { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+
+/* Étapes */
+.step { display: grid; gap: var(--s5); }
+.step-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s2) var(--s4); align-items: start; }
+.step-head .k { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; }
+.step-head > div { display: grid; gap: var(--s2); padding-top: 4px; }
+.step-head p { color: var(--muted); max-width: 64ch; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s5); display: grid; gap: var(--s5); box-shadow: var(--shadow); }
+@media (max-width: 520px) { .card { padding: var(--s4); } }
+
+/* 1. Registre */
+.gens { display: flex; gap: var(--s2); overflow-x: auto; padding-bottom: var(--s1); scrollbar-width: thin; }
+.gen {
+  flex: 1 0 84px; border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: var(--s2) var(--s3);
+  cursor: pointer; display: grid; gap: 6px; text-align: left; min-width: 84px;
 }
-.fam .t { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; }
-.fam[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.gen .g { font-weight: 800; }
+.gen .c { font-size: .8rem; color: var(--muted); }
+.gen.done { background: var(--good-soft); border-color: transparent; }
+.gen.done .c { color: var(--good); font-weight: 700; }
+.gen[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--surface); }
 .bar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden; }
-.bar i { display: block; height: 100%; background: var(--accent); }
-.bar.good i { background: var(--good); }
-
-/* 2. Progression */
-.ladder { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; }
-@media (max-width: 760px) { .ladder { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-@media (max-width: 420px) { .ladder { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.rung {
-  border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; cursor: pointer;
-  display: grid; gap: 4px; text-align: left;
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.gen.done .bar i, .bar.good i { background: var(--good); }
+.tools { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); flex-wrap: wrap; padding-top: var(--s4); border-top: 1px solid var(--line); }
+.switch { display: inline-flex; gap: var(--s2); align-items: center; cursor: pointer; font-weight: 700; font-size: .95rem; }
+.switch input { appearance: none; width: 38px; height: 22px; border-radius: 999px; background: var(--sunken); border: 1px solid var(--line); position: relative; cursor: pointer; margin: 0; flex: none; transition: background .15s; }
+.switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px rgb(0 0 0 / .3); transition: transform .15s; }
+.switch input:checked { background: var(--accent); border-color: var(--accent); }
+.switch input:checked::after { transform: translateX(16px); }
+.mounts { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--s3); }
+.mount {
+  border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: var(--s3) var(--s4);
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s2) var(--s3); align-items: center; text-align: left;
 }
-.rung .g { font-weight: 700; }
-.rung .c { font-size: .8rem; color: var(--muted); }
-.rung.done { background: var(--good-soft); border-color: transparent; }
-.rung[aria-expanded="true"] { outline: 2px solid var(--accent); outline-offset: -1px; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
-.card {
-  border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 12px; cursor: pointer; text-align: left;
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
-}
-.card .nm { font-weight: 700; line-height: 1.2; }
-.card .box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line); display: grid; place-items: center; font-size: .85rem; font-weight: 800; }
-.card[aria-pressed="true"] { background: var(--good-soft); border-color: transparent; }
-.card[aria-pressed="true"] .box { background: var(--good); border-color: var(--good); color: var(--surface); }
-.stockcard { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; background: var(--bg); }
-.stockcard input { width: 64px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
+button.mount { cursor: pointer; }
+.mount .nm { font-weight: 700; line-height: 1.25; }
+.mount .box { width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--line); display: grid; place-items: center; font-size: .85rem; font-weight: 800; background: var(--surface); }
+.mount[aria-pressed="true"], .mount.is-born { background: var(--good-soft); border-color: transparent; }
+.mount[aria-pressed="true"] .box, .mount .box[aria-pressed="true"] { background: var(--good); border-color: var(--good); color: var(--surface); }
+.mount .stepper { grid-column: 1 / 4; display: flex; align-items: center; justify-content: space-between; gap: var(--s2); font-size: .85rem; color: var(--muted); padding-top: var(--s2); border-top: 1px dashed var(--line); }
+.stepper .ctl { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.stepper button { border: 0; background: none; width: 30px; height: 28px; cursor: pointer; font-weight: 800; color: var(--ink); }
+.stepper input { width: 44px; border: 0; background: none; text-align: center; padding: 0; -moz-appearance: textfield; color: var(--ink); }
+.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.mount-group { display: grid; gap: var(--s4); }
+.mount-group > .row h3 { margin-right: auto; }
 
-/* 3. Conditions */
-.odds { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; background: var(--accent-soft); border-radius: var(--radius); padding: 14px 18px; }
-.odds .big { font-family: var(--font-display); font-size: 2.6rem; font-weight: 800; color: var(--accent); line-height: 1; }
-@media (max-width: 480px) { .odds { grid-template-columns: minmax(0, 1fr); gap: 6px; } }
-.presets { display: flex; gap: 6px; flex-wrap: wrap; }
-.presets button { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-weight: 700; font-size: .9rem; }
+/* 2. Conditions */
+.gauge { display: grid; gap: var(--s3); }
+.gauge .top { display: flex; align-items: baseline; gap: var(--s4); flex-wrap: wrap; }
+.gauge .big { font-family: var(--font-display); font-size: 3rem; font-weight: 800; line-height: 1; color: var(--accent); }
+.gauge .meter { display: flex; height: 16px; border-radius: 999px; background: var(--sunken); overflow: hidden; }
+.gauge .meter i { display: block; height: 100%; transition: width .25s ease; }
+.seg-base { background: var(--muted); }
+.seg-lvl { background: var(--accent); }
+.seg-opti { background: var(--info); }
+.seg-tak { background: var(--rare); }
+.legend { display: flex; gap: var(--s2) var(--s4); flex-wrap: wrap; font-size: .88rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--sunken); border: 1px solid var(--line); }
+.dots i.on { background: var(--good); border-color: var(--good); }
+.field { display: grid; gap: var(--s3); }
+.field > label { font-weight: 700; }
+.presets { display: flex; gap: var(--s2); flex-wrap: wrap; }
+.presets button { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-weight: 700; font-size: .92rem; }
 .presets button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 input[type="range"] { width: 100%; accent-color: var(--accent); }
-select { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
-.check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
-.check input { margin-top: 5px; accent-color: var(--accent); width: 17px; height: 17px; flex: none; }
-.check span { display: grid; gap: 2px; }
-details.adv summary, details.more summary { cursor: pointer; font-weight: 700; color: var(--accent); }
-details.adv[open] summary { margin-bottom: 12px; }
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+select { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--s3); }
+.opt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s3); align-items: start; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--s4); cursor: pointer; background: var(--bg); }
+.opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.opt input { margin: 4px 0 0; width: 18px; height: 18px; accent-color: var(--accent); }
+.opt span { display: grid; gap: 2px; }
+.opt small { color: var(--muted); font-size: .88rem; line-height: 1.4; }
+details.adv > summary { cursor: pointer; font-weight: 700; color: var(--accent); list-style: none; }
+details.adv > summary::before { content: "+ "; }
+details.adv[open] > summary::before { content: "– "; }
+details.adv[open] > summary { margin-bottom: var(--s4); }
 
-/* 4. Plan */
-.summary { font-size: 1.12rem; max-width: 68ch; }
-.summary b { font-family: var(--font-data); font-weight: 500; }
-.hint { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; color: var(--ink); }
-.next { border: 2px solid var(--accent); background: var(--surface); border-radius: var(--radius); padding: 18px; display: grid; gap: 14px; }
-.next > header { display: grid; gap: 4px; }
-.badge { justify-self: start; background: var(--accent); color: var(--accent-ink); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; padding: 2px 10px; border-radius: 999px; font-weight: 700; }
-.todo { display: grid; gap: 8px; }
-.item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 12px; background: var(--bg); border-radius: 8px; }
-.item .sw { margin-top: 2px; }
-.item .what { display: grid; gap: 2px; min-width: 0; }
-.item .what b { line-height: 1.25; }
-.item .how { font-size: .92rem; color: var(--muted); }
-.item .how strong { color: var(--ink); font-weight: 700; }
-.item.done-item { opacity: .7; }
-@media (max-width: 520px) {
-  .item { grid-template-columns: auto minmax(0, 1fr); }
-  .item .btn { grid-column: 2; justify-self: start; }
+/* 3. Plan */
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s4) var(--s5); display: grid; gap: 2px; box-shadow: var(--shadow); }
+.stat b { font-family: var(--font-data); font-size: 1.8rem; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.stat span { color: var(--muted); font-size: .9rem; }
+@media (max-width: 560px) { .stats { grid-template-columns: minmax(0, 1fr); } .stat { grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: var(--s3); } .stat b { font-size: 1.4rem; } }
+.tip { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s3); background: var(--accent-soft); border-radius: var(--radius); padding: var(--s4) var(--s5); }
+.tip .ic { font-family: var(--font-display); font-weight: 800; color: var(--accent); font-size: 1.3rem; line-height: 1.2; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.chip { display: inline-flex; align-items: center; gap: var(--s2); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px 5px 5px; font-weight: 700; }
+.timeline { display: grid; gap: var(--s4); position: relative; }
+.phase { position: relative; padding-left: 52px; }
+.phase::before { content: ""; position: absolute; left: 19px; top: 44px; bottom: calc(var(--s4) * -1); width: 2px; background: var(--line); }
+.phase:last-child::before { display: none; }
+.phase > .dot { position: absolute; left: 0; top: 2px; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); border: 2px solid var(--line); font-weight: 800; font-size: .9rem; }
+.phase.now > .dot { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.phase-body { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.phase.now .phase-body { border: 2px solid var(--accent); }
+.phase-body > header, .phase-body > summary { padding: var(--s4) var(--s5); display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2) var(--s4); flex-wrap: wrap; }
+.phase-body > summary { cursor: pointer; list-style: none; }
+.phase-body > summary::-webkit-details-marker { display: none; }
+.phase-body > summary h3::after { content: " ▸"; color: var(--accent); font-size: .9em; }
+.phase-body[open] > summary h3::after { content: " ▾"; }
+.phase-body .intro { padding: 0 var(--s5); color: var(--muted); font-size: .92rem; max-width: 68ch; }
+.tasks { display: grid; gap: var(--s3); padding: var(--s4) var(--s5) var(--s5); }
+.badge { display: inline-block; background: var(--accent); color: var(--accent-ink); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; padding: 3px 10px; border-radius: 999px; font-weight: 800; vertical-align: middle; margin-right: var(--s2); }
+.task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s3) var(--s4); align-items: center; background: var(--bg); border-radius: var(--radius-sm); padding: var(--s4); }
+.task .who { display: grid; gap: 6px; min-width: 0; }
+.task .who b { font-size: 1.05rem; line-height: 1.25; }
+.pairs { display: flex; flex-wrap: wrap; gap: 6px var(--s3); font-size: .92rem; color: var(--muted); }
+.pair { display: inline-flex; align-items: center; gap: 6px; }
+.pair .x { color: var(--muted); font-weight: 800; }
+.pair .sw { width: 16px; height: 16px; }
+.metrics { display: flex; gap: var(--s4); margin: 0; }
+.metrics div { display: grid; text-align: right; }
+.metrics dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.metrics dd { margin: 0; font-family: var(--font-data); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.task .act { grid-column: 3; grid-row: 1 / 3; }
+.task .why { grid-column: 2 / 3; font-size: .85rem; color: var(--muted); }
+.tag { font-size: .72rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; white-space: nowrap; letter-spacing: .02em; }
+.tag.new { background: var(--good-soft); color: var(--good); }
+.tag.old { background: var(--sunken); color: var(--muted); }
+@media (max-width: 680px) {
+  .task { grid-template-columns: auto minmax(0, 1fr); }
+  .task .metrics { grid-column: 2; }
+  .task .metrics div { text-align: left; }
+  .task .why { grid-column: 2; }
+  .task .act { grid-column: 2; grid-row: auto; justify-self: start; }
 }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { display: inline-flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px 4px 4px; font-weight: 700; }
-details.later { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-details.later > summary { cursor: pointer; padding: 14px 18px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; list-style: none; }
-details.later > summary::-webkit-details-marker { display: none; }
-details.later > summary::before { content: "▸"; color: var(--accent); margin-right: 4px; }
-details.later[open] > summary::before { content: "▾"; }
-details.later > summary .t { font-weight: 700; flex: 1; }
-details.later > .todo { padding: 0 18px 18px; }
-.empty { background: var(--good-soft); color: var(--ink); border-radius: var(--radius); padding: 20px; display: grid; gap: 6px; }
+.empty { background: var(--good-soft); border-radius: var(--radius); padding: var(--s6); display: grid; gap: var(--s2); text-align: center; justify-items: center; }
+.sw { width: 26px; height: 26px; border-radius: 50%; flex: none; border: 1px solid rgb(0 0 0 / .22); display: inline-block; }
+.sw.lg { width: 38px; height: 38px; }
 
-.sw { width: 24px; height: 24px; border-radius: 50%; flex: none; border: 1px solid rgb(0 0 0 / .25); }
-
-/* Mémo */
-.memo { display: grid; gap: 16px; }
-.memo ul, .memo ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
-.memo li { max-width: 75ch; }
-.tips { counter-reset: tip; list-style: none; padding: 0 !important; }
-.tips li { counter-increment: tip; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; }
-.tips li::before { content: counter(tip); font-family: var(--font-display); font-weight: 800; color: var(--accent); font-size: 1.15rem; line-height: 1.3; }
+/* Aide */
+.acc { display: grid; gap: var(--s3); }
+.acc details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.acc summary { cursor: pointer; padding: var(--s4) var(--s5); font-weight: 800; font-size: 1.05rem; display: flex; justify-content: space-between; gap: var(--s3); list-style: none; }
+.acc summary::-webkit-details-marker { display: none; }
+.acc summary::after { content: "+"; color: var(--accent); font-size: 1.3rem; line-height: 1; }
+.acc details[open] summary::after { content: "–"; }
+.acc .in { padding: 0 var(--s5) var(--s5); display: grid; gap: var(--s4); }
+.acc ul, .acc ol { margin: 0; padding-left: 22px; display: grid; gap: var(--s2); }
+.acc li { max-width: 72ch; }
+.tips { counter-reset: tip; list-style: none; padding: 0 !important; gap: var(--s3) !important; }
+.tips li { counter-increment: tip; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: var(--s2); }
+.tips li::before { content: counter(tip); font-family: var(--font-display); font-weight: 800; color: var(--accent); font-size: 1.2rem; line-height: 1.3; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--s5); }
 .tbl-wrap { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; font-size: .92rem; }
-th, td { text-align: left; padding: 6px 10px; border-top: 1px solid var(--line); vertical-align: top; }
-th { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: var(--sunken); }
+table { border-collapse: collapse; width: 100%; font-size: .93rem; }
+th, td { text-align: left; padding: 7px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+th { font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: var(--sunken); }
 td.r, th.r { text-align: right; }
 tr.hl td { background: var(--accent-soft); font-weight: 700; }
-textarea { width: 100%; min-height: 80px; font-family: var(--font-data); font-size: .8rem; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; color: var(--ink); }
+textarea { width: 100%; min-height: 90px; font-family: var(--font-data); font-size: .8rem; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--s3); color: var(--ink); }
 
 .toast {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
-  background: var(--ink); color: var(--bg); border-radius: 999px; padding: 10px 12px 10px 18px; display: flex; gap: 14px; align-items: center;
-  box-shadow: 0 6px 20px rgb(0 0 0 / .25); z-index: 20; max-width: calc(100% - 32px);
+  background: var(--ink); color: var(--bg); border-radius: 999px; padding: 10px 12px 10px 20px; display: flex; gap: var(--s4); align-items: center;
+  box-shadow: 0 8px 24px rgb(0 0 0 / .3); z-index: 20; max-width: calc(100% - 32px);
 }
-.toast button { background: none; border: 1px solid currentColor; color: inherit; border-radius: 999px; padding: 2px 12px; cursor: pointer; font-weight: 700; }
-footer { color: var(--muted); font-size: .85rem; display: grid; gap: 4px; }
+.toast button { background: none; border: 1px solid currentColor; color: inherit; border-radius: 999px; padding: 3px 14px; cursor: pointer; font-weight: 700; }
+footer { border-top: 1px solid var(--line); }
+footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-size: .86rem; display: grid; gap: var(--s1); }
 </style>
 
-<div class="wrap">
-  <header class="top">
-    <span class="eyebrow">Registre d'élevage · Dofus 3.7</span>
-    <h1>Génération 10</h1>
-    <p>Suis les 4 étapes ci-dessous : le site te dit quoi capturer et quoi accoupler, dans l'ordre, pour boucler les succès de naissance de la génération 2 à la génération 10.</p>
-  </header>
+<header class="topbar gutter">
+  <div class="wrap">
+    <span class="brand">Registre <span>Gén. 10</span></span>
+    <nav class="seg" id="families" aria-label="Famille de montures"></nav>
+  </div>
+</header>
 
-  <section class="step" aria-labelledby="s1">
-    <span class="n" aria-hidden="true">1</span>
-    <div class="body">
-      <div class="step-head"><h2 id="s1">Choisis ta famille de montures</h2>
-        <p>Chaque famille a ses propres succès et ses propres croisements. Ta progression est gardée séparément pour chacune.</p></div>
-      <div class="families" id="families"></div>
-    </div>
-  </section>
+<main class="gutter">
+  <div class="wrap">
+    <section class="hero" id="hero" aria-live="polite"></section>
+    <nav class="howto" id="howto" aria-label="Étapes"></nav>
 
-  <section class="step" aria-labelledby="s2">
-    <span class="n" aria-hidden="true">2</span>
-    <div class="body">
-      <div class="step-head"><h2 id="s2">Coche ce que tu as déjà fait naître</h2>
-        <p>Ouvre l'interface des succès en jeu (depuis la 3.7, une icône y signale les montures manquantes) et reporte-les ici. Clique sur une génération pour voir ses montures.</p></div>
-      <div class="panel" id="progress"></div>
-    </div>
-  </section>
+    <section class="step" id="registre" aria-labelledby="h-registre">
+      <div class="step-head"><span class="k" aria-hidden="true">1</span><div>
+        <h2 id="h-registre">Coche ce que tu as déjà fait naître</h2>
+        <p>Reporte ici les montures validées dans l'interface des succès du jeu. Depuis la 3.7, une icône y signale celles qui manquent.</p></div></div>
+      <div class="card" id="progress"></div>
+    </section>
 
-  <section class="step" aria-labelledby="s3">
-    <span class="n" aria-hidden="true">3</span>
-    <div class="body">
-      <div class="step-head"><h2 id="s3">Indique tes conditions d'accouplement</h2>
-        <p>Plus tes parents ont de niveau, plus le bébé a de chances d'avoir la nouvelle couleur. C'est le réglage qui change le plus le nombre d'accouplements.</p></div>
-      <div class="panel" id="conditions"></div>
-    </div>
-  </section>
+    <section class="step" id="conditions" aria-labelledby="h-conditions">
+      <div class="step-head"><span class="k" aria-hidden="true">2</span><div>
+        <h2 id="h-conditions">Règle tes conditions d'accouplement</h2>
+        <p>Le niveau des parents est le réglage qui change le plus la quantité de travail : chaque niveau ajoute des chances d'obtenir la nouvelle couleur.</p></div></div>
+      <div class="card" id="cond"></div>
+    </section>
 
-  <section class="step" aria-labelledby="s4">
-    <span class="n" aria-hidden="true">4</span>
-    <div class="body">
-      <div class="step-head"><h2 id="s4">Suis ton plan</h2>
-        <p>Fais les étapes dans l'ordre. Quand un bébé naît, clique sur « C'est né » : le plan se met à jour tout seul.</p></div>
-      <div class="body" id="plan"></div>
-    </div>
-  </section>
+    <section class="step" id="plan" aria-labelledby="h-plan">
+      <div class="step-head"><span class="k" aria-hidden="true">3</span><div>
+        <h2 id="h-plan">Suis ton plan</h2>
+        <p>Fais les générations dans l'ordre. Quand un bébé naît, clique sur « C'est né » : le plan se recalcule.</p></div></div>
+      <div class="step" id="planBody"></div>
+    </section>
 
-  <section class="step" aria-labelledby="s5">
-    <span class="n" aria-hidden="true">?</span>
-    <div class="body">
-      <div class="step-head"><h2 id="s5">Comprendre et aller plus vite</h2>
-        <p>Les règles de l'élevage depuis la refonte 3.5, les astuces pour économiser des accouplements et la sauvegarde de ta progression.</p></div>
-      <div class="memo" id="memo"></div>
-    </div>
-  </section>
+    <section class="step" id="aide" aria-labelledby="h-aide">
+      <div class="step-head"><span class="k" aria-hidden="true">?</span><div>
+        <h2 id="h-aide">Comprendre et aller plus vite</h2>
+        <p>Les règles depuis la refonte 3.5, les astuces pour économiser des accouplements, et la sauvegarde de ta progression.</p></div></div>
+      <div class="acc" id="memo"></div>
+    </section>
+  </div>
+</main>
 
-  <footer>
+<footer class="gutter">
+  <div class="wrap">
     <span>Recettes de croisement : données communautaires (dragodinde.fr). Noms officiels : DofusDB. Mécaniques : guides de l'éleveur à jour de la 3.7. En jeu, la fenêtre d'accouplement affiche la probabilité réelle : c'est elle qui fait foi.</span>
     <span>Site de fan non officiel, non affilié à Ankama. DOFUS est une marque d'Ankama.</span>
-  </footer>
-</div>
+  </div>
+</footer>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script id="mount-data" type="application/json">/*__DATA__*/</script>
@@ -270,6 +344,7 @@ footer { color: var(--muted); font-size: .85rem; display: grid; gap: 4px; }
   const fmt0 = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
   const fmt1 = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
   const up = (x) => fmt0.format(Math.ceil(x - 1e-9));
+  const plural = (n, s, p = s + "s") => (n > 1 ? p : s);
 
   const defaults = () => ({
     family: "dragodinde", level: 100, opti: false, optiVal: 20, takeza: false, clone: true,
@@ -288,17 +363,21 @@ footer { color: var(--muted); font-size: .85rem; display: grid; gap: 4px; }
   const index = {};
   for (const fam of Object.keys(DATA)) index[fam] = Object.fromEntries(DATA[fam].map((m) => [m.id, m]));
   const nameOf = (fam, id) => index[fam][id].name;
-  const swatch = (m) => {
+  const swatch = (m, cls = "") => {
     const [a, b] = m.colors.map((c) => HUES[c] || "#888");
-    return `<span class="sw" style="background:${b ? `linear-gradient(135deg, ${a} 0 50%, ${b} 50% 100%)` : a}" aria-hidden="true"></span>`;
+    return `<span class="sw ${cls}" style="background:${b ? `linear-gradient(135deg, ${a} 0 50%, ${b} 50% 100%)` : a}" aria-hidden="true"></span>`;
   };
   const genList = (fam, g) => DATA[fam].filter((m) => m.gen === g).sort((a, b) => a.name.localeCompare(b.name, "fr"));
   const bornCount = (fam, g) => genList(fam, g).filter((m) => state.born[fam][m.id]).length;
-  const firstOpenGen = (fam) => { for (let g = 2; g <= 10; g++) if (bornCount(fam, g) < genList(fam, g).length) return g; return null; };
+  const famTotals = (fam) => {
+    const all = DATA[fam].filter((m) => m.gen >= 2);
+    return { n: all.filter((m) => state.born[fam][m.id]).length, tot: all.length };
+  };
+  const firstOpenGen = (fam) => { for (let g = 2; g <= 10; g++) if (bornCount(fam, g) < genList(fam, g).length) return g; return 2; };
 
   function odds(s = state) {
     const lvl = 0.15 * s.level * 2, opti = s.opti ? Number(s.optiVal) : 0, tak = s.takeza ? 20 : 0;
-    return { lvl, opti, tak, raw: 30 + lvl + opti + tak, p: Math.min(100, 30 + lvl + opti + tak) / 100 };
+    return { lvl, opti, tak, p: Math.min(100, 30 + lvl + opti + tak) / 100 };
   }
 
   // Planificateur : remonte la demande de la génération 10 vers la génération 1.
@@ -347,155 +426,194 @@ footer { color: var(--muted); font-size: .85rem; display: grid; gap: 4px; }
     return { result, captures, totalBreed, newOnes, p, totalCaptures: captures.reduce((s2, c) => s2 + Math.ceil(c.n - 1e-9), 0) };
   }
 
-  /* ---------- 1. Familles ---------- */
+  /* ---------- Barre des familles ---------- */
   function renderFamilies() {
     $("families").innerHTML = Object.entries(FAMILIES).map(([k, f]) => {
-      const all = DATA[k].filter((m) => m.gen >= 2), n = all.filter((m) => state.born[k][m.id]).length;
-      return `<button type="button" class="fam" data-fam="${k}" aria-pressed="${state.family === k}">
-        <span class="t">${f.label}</span>
-        <span class="small muted"><span class="num">${n} / ${all.length}</span> montures nées</span>
-        <span class="bar ${n === all.length ? "good" : ""}"><i style="width:${(n / all.length) * 100}%"></i></span>
-      </button>`;
+      const t = famTotals(k);
+      return `<button type="button" data-fam="${k}" aria-pressed="${state.family === k}">${f.label} <span class="num">${Math.round((t.n / t.tot) * 100)} %</span></button>`;
     }).join("");
   }
 
-  /* ---------- 2. Progression ---------- */
-  function renderProgress() {
-    const fam = state.family, f = FAMILIES[fam];
-    const open = state.openGen;
-    let html = `<div class="row" style="justify-content:space-between">
-      <span class="small muted">Raccourci : si tu as déjà bouclé des générations entières, coche-les d'un coup.</span>
-      <span class="row"><label for="upTo" class="small">J'ai tout fait naître jusqu'à la</label>
-        <select id="upTo"><option value="1">aucune</option>${Array.from({ length: 9 }, (_, i) => i + 2).map((g) => `<option value="${g}">génération ${g}</option>`).join("")}</select>
-        <button type="button" class="btn small" data-act="upto">Cocher</button></span>
-    </div>
-    <div class="ladder">${Array.from({ length: 9 }, (_, i) => i + 2).map((g) => {
-      const tot = genList(fam, g).length, n = bornCount(fam, g);
-      return `<button type="button" class="rung ${n === tot ? "done" : ""}" data-gen="${g}" aria-expanded="${open === g}">
-        <span class="g">Gén. ${g}</span><span class="c num">${n === tot ? "✓ complète" : `${n} / ${tot}`}</span>
-        <span class="bar ${n === tot ? "good" : ""}"><i style="width:${(n / tot) * 100}%"></i></span></button>`;
-    }).join("")}</div>`;
-    if (open) {
-      const list = genList(fam, open), all = list.every((m) => state.born[fam][m.id]);
-      html += `<div class="row" style="justify-content:space-between">
-          <h3>Génération ${open} · ${f.label}</h3>
-          <span class="row"><button type="button" class="btn small" data-act="gen-all" data-gen="${open}">${all ? "Tout décocher" : "Tout cocher"}</button>
-          <button type="button" class="btn small" data-act="close">Fermer</button></span></div>
-        <div class="cards">${list.map((m) => {
-          const b = !!state.born[fam][m.id];
-          return `<button type="button" class="card" data-born="${m.id}" aria-pressed="${b}">${swatch(m)}<span class="nm">${esc(m.name)}</span><span class="box" aria-hidden="true">${b ? "✓" : ""}</span></button>`;
-        }).join("")}</div>`;
+  /* ---------- Bandeau ---------- */
+  function renderHero(pl) {
+    const fam = state.family, f = FAMILIES[fam], t = famTotals(fam);
+    const pct = t.n / t.tot, C = 2 * Math.PI * 52;
+    const anyBorn = Object.keys(DATA).some((k) => Object.keys(state.born[k]).length);
+    const rows = Object.entries(pl.result).map(([id, r]) => ({ m: index[fam][id], r }));
+    let title, lead, actions;
+    if (!rows.length) {
+      title = t.n === t.tot ? `Tous les succès des ${f.label.toLowerCase()} sont bouclés` : `Rien à faire naître sur ces générations`;
+      lead = t.n === t.tot ? "Bravo. Passe à une autre famille dans la barre du haut." : `Tu vises les générations ${state.genMin} à ${state.genMax}, déjà complètes. Élargis la plage dans les réglages avancés de l'étape 2.`;
+      actions = `<a class="btn" href="#conditions">Voir les réglages</a>`;
+    } else if (!anyBorn) {
+      title = `Bienvenue, éleveur`;
+      lead = `Commence par cocher les ${f.label.toLowerCase()} que tu as déjà fait naître. Le site calcule ensuite, génération par génération, ce qu'il te reste à capturer et à accoupler.`;
+      actions = `<a class="btn primary" href="#registre">Cocher mes montures</a><a class="btn ghost" href="#plan">Voir le plan complet</a>`;
     } else {
-      html += `<p class="small muted">Clique sur une génération ci-dessus pour cocher ses montures une par une.</p>`;
+      const g = Math.min(...rows.map((x) => x.m.gen));
+      const names = rows.filter((x) => x.m.gen === g).map((x) => x.m.name);
+      const shown = names.slice(0, 3).join(", ") + (names.length > 3 ? ` et ${names.length - 3} autre${names.length - 3 > 1 ? "s" : ""}` : "");
+      title = `Il te reste ${pl.newOnes} ${plural(pl.newOnes, "naissance")} pour les succès`;
+      lead = `Prochaine étape : la génération ${g}, avec ${esc(shown)}.`;
+      actions = `<a class="btn primary" href="#phase-${g}">Voir la prochaine étape</a><a class="btn ghost" href="#registre">Mettre à jour mon registre</a>`;
     }
-    html += `<details class="more" ${state.showStock ? "open" : ""} id="stockDetails"><summary>J'ai déjà des montures fertiles en réserve (optionnel)</summary>
-      <div style="display:grid;gap:10px;margin-top:12px">
-        <p class="small muted">Indique les montures fertiles que tu possèdes déjà : le plan les utilisera comme parents et te demandera moins de captures et d'accouplements.</p>
-        ${Array.from({ length: 10 }, (_, i) => i + 1).map((g) => `<div style="display:grid;gap:6px"><span class="eyebrow">Génération ${g}</span><div class="cards">${genList(fam, g).map((m) =>
-          `<label class="stockcard">${swatch(m)}<span class="small">${esc(m.name)}</span><input type="number" min="0" step="1" id="stock-${fam}-${m.id}" data-stock="${m.id}" value="${Number(state.stock[fam][m.id]) || 0}" aria-label="Stock ${esc(m.name)}"></label>`).join("")}</div></div>`).join("")}
-      </div></details>`;
-    $("progress").innerHTML = html;
+    $("hero").innerHTML = `<div class="txt"><span class="eyebrow">${f.label} · Dofus 3.7</span><h1>${title}</h1><p class="lead">${lead}</p><div class="actions">${actions}</div></div>
+      <div class="ring ${pct >= 1 ? "full" : ""}" role="img" aria-label="${t.n} montures nées sur ${t.tot}">
+        <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="12"></circle>
+        <circle class="val" cx="60" cy="60" r="52" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct)}"></circle></svg>
+        <div class="lbl"><b>${Math.round(pct * 100)} %</b><span class="num">${t.n} / ${t.tot} nées</span></div></div>`;
+    const steps = [["registre", "Coche ce qui est né", anyBorn], ["conditions", "Règle tes conditions", false], ["plan", "Suis le plan", false]];
+    $("howto").innerHTML = steps.map(([id, l, d], i) => `<a href="#${id}" class="${d ? "done" : ""}"><span class="k">${d ? "✓" : i + 1}</span><span>${l}</span></a>`).join("");
   }
 
-  /* ---------- 3. Conditions ---------- */
+  /* ---------- 1. Registre ---------- */
+  function renderProgress() {
+    const fam = state.family, f = FAMILIES[fam], g = state.openGen || firstOpenGen(fam);
+    const gens = (state.showStock ? [1] : []).concat([2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    const list = genList(fam, g), all = g > 1 && list.every((m) => state.born[fam][m.id]);
+    $("progress").innerHTML = `
+      <div class="gens" role="group" aria-label="Générations">${gens.map((x) => {
+        const tot = genList(fam, x).length, n = x === 1 ? 0 : bornCount(fam, x), done = x > 1 && n === tot;
+        return `<button type="button" class="gen ${done ? "done" : ""}" data-gen="${x}" aria-pressed="${g === x}">
+          <span class="g">Gén. ${x}</span><span class="c num">${x === 1 ? "captures" : done ? "✓ complète" : `${n} / ${tot}`}</span>
+          ${x === 1 ? "" : `<span class="bar"><i style="width:${(n / tot) * 100}%"></i></span>`}</button>`;
+      }).join("")}</div>
+      <div class="mount-group">
+        <div class="row"><h3>Génération ${g}</h3>
+          <span class="muted small">${g === 1 ? "Montures capturées : indique seulement ton stock." : `${bornCount(fam, g)} sur ${list.length} ${plural(list.length, "née")}`}</span>
+          ${g > 1 ? `<button type="button" class="btn sm" data-act="gen-all" data-gen="${g}">${all ? "Tout décocher" : "Tout cocher"}</button>` : ""}</div>
+        <div class="mounts">${list.map((m) => mountCard(fam, m)).join("")}</div>
+      </div>
+      <div class="tools">
+        <label class="switch" for="showStock"><input type="checkbox" id="showStock" ${state.showStock ? "checked" : ""}> J'ai des montures fertiles en réserve</label>
+        <span class="row small"><label for="upTo">Raccourci : tout est né jusqu'à la</label>
+          <select id="upTo">${[2, 3, 4, 5, 6, 7, 8, 9, 10].map((x) => `<option value="${x}" ${x === Math.max(2, g - 1) ? "selected" : ""}>génération ${x}</option>`).join("")}</select>
+          <button type="button" class="btn sm" data-act="upto">Cocher</button></span>
+      </div>
+      ${state.showStock ? `<p class="small muted">Les réserves servent de parents dans le plan : moins de captures et d'accouplements. La génération 1 apparaît pour noter tes captures en stock.</p>` : ""}`;
+  }
+  function mountCard(fam, m) {
+    const stock = Number(state.stock[fam][m.id]) || 0;
+    const stepper = state.showStock ? `<span class="stepper"><span>En réserve</span><span class="ctl">
+        <button type="button" data-step="${m.id}" data-d="-1" aria-label="Retirer une ${esc(m.name)}">−</button>
+        <input type="number" min="0" step="1" id="stock-${fam}-${m.id}" data-stock="${m.id}" value="${stock}" aria-label="Réserve de ${esc(m.name)}">
+        <button type="button" data-step="${m.id}" data-d="1" aria-label="Ajouter une ${esc(m.name)}">+</button></span></span>` : "";
+    if (m.gen === 1) return `<div class="mount">${swatch(m)}<span class="nm">${esc(m.name)}</span><span></span>${stepper}</div>`;
+    const b = !!state.born[fam][m.id];
+    if (!state.showStock) return `<button type="button" class="mount" data-born="${m.id}" aria-pressed="${b}">${swatch(m)}<span class="nm">${esc(m.name)}</span><span class="box" aria-hidden="true">${b ? "✓" : ""}</span></button>`;
+    return `<div class="mount ${b ? "is-born" : ""}">${swatch(m)}<span class="nm">${esc(m.name)}</span>
+      <button type="button" class="box" data-born="${m.id}" aria-pressed="${b}" aria-label="${esc(m.name)} née">${b ? "✓" : ""}</button>${stepper}</div>`;
+  }
+
+  /* ---------- 2. Conditions ---------- */
   function renderConditions() {
-    const o = odds();
-    const presets = [[1, "Bébés (niv. 1)"], [60, "Niv. 60"], [100, "Niv. 100"], [150, "Niv. 150"], [200, "Niv. 200"]];
-    const inTen = Math.round(o.p * 10);
-    $("conditions").innerHTML = `
-      <div class="odds">
-        <span class="big num">${fmt1.format(o.p * 100)} %</span>
-        <span><b>de chances que le bébé ait la nouvelle couleur</b> (la « génération cible »).<br>
-        <span class="small">Soit environ ${inTen} bébé${inTen > 1 ? "s" : ""} réussi${inTen > 1 ? "s" : ""} sur 10. En cas d'échec, le bébé reprend une couleur de ses parents ou grands-parents.</span></span>
-      </div>
-      <div style="display:grid;gap:8px">
-        <label for="level"><b>Niveau moyen de tes parents : <span class="num">${state.level}</span></b></label>
-        <div class="presets">${presets.map(([v, l]) => `<button type="button" data-level="${v}" aria-pressed="${state.level === v}">${l}</button>`).join("")}</div>
+    $("cond").innerHTML = `
+      <div class="gauge" id="gauge"></div>
+      <div class="field">
+        <label for="level">Niveau moyen de tes parents : <span class="num" id="levelOut">${state.level}</span></label>
+        <div class="presets">${[[1, "Juste capturés (1)"], [60, "60"], [100, "100"], [150, "150"], [200, "200 (max)"]].map(([v, l]) => `<button type="button" data-level="${v}" aria-pressed="${state.level === v}">${l}</button>`).join("")}</div>
         <input type="range" id="level" min="1" max="200" step="1" value="${state.level}">
-        <span class="small muted">Une monture gagne des niveaux dans l'enclos avec la jauge d'expérience. Compte environ 12 h pour le niveau 100.</span>
+        <span class="small muted">Les montures montent de niveau dans l'enclos avec la jauge d'expérience : environ 12 h pour le niveau 100.</span>
       </div>
-      <div class="grid2">
-        <label class="check" for="opti"><input type="checkbox" id="opti" ${state.opti ? "checked" : ""}>
-          <span><b>J'utilise une Optimakina</b><span class="small muted">+${state.optiVal} % de chances. Il en faut une par accouplement, de génération égale ou supérieure au bébé.</span></span></label>
-        <label class="check" for="takeza"><input type="checkbox" id="takeza" ${state.takeza ? "checked" : ""}>
-          <span><b>C'est le jour Almanax de Takeza</b><span class="small muted">+20 % de chances ce jour-là uniquement.</span></span></label>
+      <div class="opts">
+        <label class="opt" for="opti"><input type="checkbox" id="opti" ${state.opti ? "checked" : ""}>
+          <span><b>J'utilise une Optimakina</b><small>+${state.optiVal} % de chances. Une par accouplement, de génération égale ou supérieure au bébé.</small></span></label>
+        <label class="opt" for="takeza"><input type="checkbox" id="takeza" ${state.takeza ? "checked" : ""}>
+          <span><b>C'est le jour de Takeza</b><small>Bonus Almanax : +20 % de chances, ce jour-là uniquement.</small></span></label>
       </div>
-      <details class="adv"><summary>Réglages avancés</summary>
-        <div class="grid2">
-          <label class="check" for="clone"><input type="checkbox" id="clone" ${state.clone ? "checked" : ""}>
-            <span><b>Je recycle les parents stériles par clonage</b><span class="small muted">Deux stériles de même génération donnent une monture fertile. Cela divise environ par deux le nombre de parents à produire.</span></span></label>
-          <div style="display:grid;gap:6px">
-            <b>Générations à viser</b>
-            <span class="row small"><label for="genMin">de la</label><select id="genMin">${genOpts(state.genMin)}</select>
-              <label for="genMax">à la</label><select id="genMax">${genOpts(state.genMax)}</select></span>
-            <span class="small muted">Par défaut, toutes. Choisis 10 à 10 pour ne viser que le succès de génération 10.</span>
-          </div>
-          <label class="row small" for="optiVal">Bonus de l'Optimakina
-            <select id="optiVal"><option value="20" ${state.optiVal == 20 ? "selected" : ""}>+20 % (depuis la 3.7)</option><option value="10" ${state.optiVal == 10 ? "selected" : ""}>+10 % (3.5 et 3.6)</option></select></label>
+      <details class="adv" id="advDetails" ${state.advOpen ? "open" : ""}><summary>Réglages avancés</summary>
+        <div class="opts">
+          <label class="opt" for="clone"><input type="checkbox" id="clone" ${state.clone ? "checked" : ""}>
+            <span><b>Je recycle les stériles par clonage</b><small>Deux stériles de même génération donnent une monture fertile : environ deux fois moins de parents à produire.</small></span></label>
+          <div class="opt" style="cursor:default"><span></span><span><b>Générations visées</b>
+            <span class="row small"><label for="genMin">de</label><select id="genMin">${genOpts(state.genMin)}</select>
+            <label for="genMax">à</label><select id="genMax">${genOpts(state.genMax)}</select></span>
+            <small>Choisis 10 à 10 pour ne viser que le succès de génération 10.</small></span></div>
+          <div class="opt" style="cursor:default"><span></span><span><b>Bonus de l'Optimakina</b>
+            <select id="optiVal" aria-label="Bonus de l'Optimakina"><option value="20" ${state.optiVal == 20 ? "selected" : ""}>+20 % (depuis la 3.7)</option><option value="10" ${state.optiVal == 10 ? "selected" : ""}>+10 % (3.5 et 3.6)</option></select></span></div>
         </div>
       </details>`;
+    renderGauge();
   }
-  const genOpts = (sel) => Array.from({ length: 9 }, (_, i) => i + 2).map((g) => `<option value="${g}" ${g === sel ? "selected" : ""}>génération ${g}</option>`).join("");
+  const genOpts = (sel) => [2, 3, 4, 5, 6, 7, 8, 9, 10].map((g) => `<option value="${g}" ${g === sel ? "selected" : ""}>génération ${g}</option>`).join("");
+  function renderGauge() {
+    const o = odds();
+    let left = 100;
+    const seg = (v) => { const w = Math.max(0, Math.min(left, v)); left -= w; return w; };
+    const parts = [["seg-base", "Base", seg(30), 30], ["seg-lvl", "Niveaux", seg(o.lvl), o.lvl], ["seg-opti", "Optimakina", seg(o.opti), o.opti], ["seg-tak", "Takeza", seg(o.tak), o.tak]];
+    const inTen = Math.round(o.p * 10);
+    $("gauge").innerHTML = `
+      <div class="top"><span class="big num">${fmt1.format(o.p * 100)} %</span>
+        <span><b>de chances que le bébé ait la nouvelle couleur</b><br><span class="small muted">En cas d'échec, il reprend une couleur de ses parents ou grands-parents.</span></span></div>
+      <div class="meter" aria-hidden="true">${parts.map(([c, , w]) => `<i class="${c}" style="width:${w}%"></i>`).join("")}</div>
+      <div class="legend">${parts.filter((x) => x[3] > 0).map(([c, l, , v]) => `<span><i class="${c}"></i>${l} +${fmt1.format(v)} %</span>`).join("")}${30 + o.lvl + o.opti + o.tak > 100 ? "<span>plafonné à 100 %</span>" : ""}</div>
+      <div class="row small"><span class="dots" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i < inTen ? "on" : ""}"></i>`).join("")}</span>
+        <span class="muted">≈ ${inTen} ${plural(inTen, "réussite")} sur 10 accouplements</span></div>`;
+  }
 
-  /* ---------- 4. Plan ---------- */
-  function itemHtml(fam, m, r) {
+  /* ---------- 3. Plan ---------- */
+  function taskHtml(fam, m, r) {
     const isNew = !state.born[fam][m.id];
     const crosses = m.recipes.map((rc, i) => ({ rc, n: r.alloc[i] })).filter((c) => c.n > 1e-9);
-    const cross = crosses.length === 1
-      ? `Accouple <strong>${esc(nameOf(fam, crosses[0].rc[0]))} × ${esc(nameOf(fam, crosses[0].rc[1]))}</strong>, environ <strong>${up(r.breedings)} fois</strong>.`
-      : `Accouple, environ <strong>${up(r.breedings)} fois</strong> en tout : ${crosses.map((c) => `<strong>${esc(nameOf(fam, c.rc[0]))} × ${esc(nameOf(fam, c.rc[1]))}</strong> (${up(c.n)}×)`).join(", ")}.`;
+    const pairs = crosses.map((c) => {
+      const [a, b] = c.rc.map((id) => index[fam][id]);
+      return `<span class="pair">${swatch(a)}${esc(a.name)} <span class="x">×</span> ${swatch(b)}${esc(b.name)}${crosses.length > 1 ? ` <span class="num">(${up(c.n)}×)</span>` : ""}</span>`;
+    }).join("");
     const why = [];
-    if (isNew) why.push("le premier bébé valide le succès");
-    if (r.asParent > 1e-9) why.push(`${up(r.asParent)} serviront de parents ensuite`);
-    return `<div class="item">${swatch(m)}
-      <div class="what"><b>${esc(m.name)}</b>
-        <span class="how">${cross} Objectif : ${up(r.births)} bébé${Math.ceil(r.births - 1e-9) > 1 ? "s" : ""} (${why.join(", ")}).</span></div>
-      ${isNew ? `<button type="button" class="btn small primary" data-born="${m.id}">C'est né ✓</button>` : `<span class="small muted">déjà née</span>`}
+    if (isNew) why.push("le premier valide le succès");
+    if (r.asParent > 1e-9) why.push(`${up(r.asParent)} serviront de parents à l'étape suivante`);
+    return `<div class="task">
+      ${swatch(m, "lg")}
+      <div class="who"><span><b>${esc(m.name)}</b> ${isNew ? '<span class="tag new">nouveau succès</span>' : '<span class="tag old">déjà née</span>'}</span>
+        <span class="pairs">${pairs}</span></div>
+      <div class="act">${isNew ? `<button type="button" class="btn sm primary" data-born="${m.id}">C'est né ✓</button>` : ""}</div>
+      <dl class="metrics"><div><dt>Accouplements</dt><dd>≈ ${up(r.breedings)}</dd></div><div><dt>Bébés visés</dt><dd>${up(r.births)}</dd></div></dl>
+      <span class="why">${why.length ? "Dont " + why.join(", ") + "." : ""}</span>
     </div>`;
   }
 
-  function renderPlan() {
+  function renderPlan(pl) {
     const fam = state.family, f = FAMILIES[fam];
-    const pl = plan(fam);
-    const el = $("plan");
+    const el = $("planBody");
     const rows = Object.entries(pl.result).map(([id, r]) => ({ m: index[fam][id], r }));
     if (!rows.length) {
-      el.innerHTML = `<div class="empty"><h3>Bravo, rien à faire naître ici !</h3>
-        <p>Les succès des générations ${state.genMin} à ${state.genMax} des ${f.label.toLowerCase()} sont bouclés d'après ton registre. Choisis une autre famille à l'étape 1.</p></div>`;
+      el.innerHTML = `<div class="empty"><h3>Rien à faire naître ici</h3><p>D'après ton registre, les générations ${state.genMin} à ${state.genMax} des ${f.label.toLowerCase()} sont complètes.</p></div>`;
       return;
     }
-    let html = `<p class="summary">Il te reste <b>${pl.newOnes}</b> montures à faire naître pour les succès. Avec tes réglages, compte environ <b>${up(pl.totalBreed)}</b> accouplements et <b>${fmt0.format(pl.totalCaptures)}</b> captures.</p>`;
+    let html = `<div class="stats">
+      <div class="stat"><b>${pl.newOnes}</b><span>${plural(pl.newOnes, "naissance")} pour les succès</span></div>
+      <div class="stat"><b>≈ ${up(pl.totalBreed)}</b><span>accouplements à ${fmt1.format(pl.p * 100)} %</span></div>
+      <div class="stat"><b>${fmt0.format(pl.totalCaptures)}</b><span>captures de génération 1</span></div></div>`;
     if (pl.p < 1) {
       const best = plan(fam, { ...state, level: 200, opti: true, optiVal: 20 });
       const gain = 1 - best.totalBreed / pl.totalBreed;
-      if (gain > 0.05) html += `<p class="hint small">Avec des parents niveau 200 et une Optimakina (100 % de réussite), il ne faudrait qu'environ <b class="num">${up(best.totalBreed)}</b> accouplements et <b class="num">${fmt0.format(best.totalCaptures)}</b> captures, soit ${Math.round(gain * 100)} % de travail en moins. Monter tes parents vaut le coup, surtout pour les générations 8 à 10.</p>`;
+      if (gain > 0.05) html += `<div class="tip"><span class="ic">!</span><p>Avec des parents niveau 200 et une Optimakina (100 % de réussite), il ne faudrait qu'environ <b class="num">${up(best.totalBreed)}</b> accouplements et <b class="num">${fmt0.format(best.totalCaptures)}</b> captures : <b>${Math.round(gain * 100)} % de travail en moins</b>. Monter tes parents vaut surtout le coup pour les générations 8 à 10. <a href="#conditions">Changer mes réglages</a></p></div>`;
     }
     if (pl.captures.length) {
-      html += `<div class="panel"><div class="row" style="justify-content:space-between"><h3>Captures à prévoir</h3><span class="small muted">À faire au fil de l'eau, par vagues.</span></div>
+      html += `<div class="card"><div class="row between"><h3>Captures à prévoir</h3><span class="small muted">Au fil de l'eau, par vagues</span></div>
         <div class="chips">${pl.captures.map((c) => `<span class="chip">${swatch(c.m)}${esc(c.m.name)} <span class="num">× ${Math.ceil(c.n - 1e-9)}</span></span>`).join("")}</div>
-        <p class="small muted">${f.where} Il faut un filet équipé (fabriqué par le métier Éleveur) pour obtenir le sort de capture ; les filets multiplicateurs capturent plusieurs montures par combat.</p></div>`;
+        <p class="small muted">${f.where} Équipe un filet (métier Éleveur) pour obtenir le sort de capture ; les filets multiplicateurs capturent plusieurs montures par combat.</p></div>`;
     }
     const gens = [...new Set(rows.map((x) => x.m.gen))].sort((a, b) => a - b);
-    gens.forEach((g, gi) => {
+    html += `<div class="timeline">${gens.map((g, gi) => {
       const list = rows.filter((x) => x.m.gen === g).sort((a, b) => a.m.name.localeCompare(b.m.name, "fr"));
       const breed = list.reduce((s, x) => s + x.r.breedings, 0);
       const fresh = list.filter((x) => !state.born[fam][x.m.id]).length;
-      const items = list.map(({ m, r }) => itemHtml(fam, m, r)).join("");
+      const meta = `<span class="small muted">≈ ${up(breed)} accouplements${fresh ? ` · ${fresh} ${plural(fresh, "nouveau succès", "nouveaux succès")}` : ""}</span>`;
+      const tasks = `<div class="tasks">${list.map(({ m, r }) => taskHtml(fam, m, r)).join("")}</div>`;
       if (gi === 0) {
-        html += `<article class="next"><header><span class="badge">Prochaine étape</span>
-          <h3>Génération ${g} : ${list.length} sorte${list.length > 1 ? "s" : ""} de bébé à faire naître</h3>
-          <p class="small muted">Rends les parents féconds en enclos (endurance, maturité et amour à 20 000), puis accouple un mâle et une femelle depuis l'étable.${fresh ? ` ${fresh} de ces bébés valident un succès.` : ""}</p></header>
-          <div class="todo">${items}</div></article>`;
-      } else {
-        html += `<details class="later"><summary><span class="t">Génération ${g} : ${list.length} sorte${list.length > 1 ? "s" : ""} de bébé</span><span class="small muted">≈ ${up(breed)} accouplements${fresh ? ` · ${fresh} pour les succès` : ""}</span></summary>
-          <div class="todo">${items}</div></details>`;
+        return `<div class="phase now" id="phase-${g}"><span class="dot">${g}</span><div class="phase-body">
+          <header><h3><span class="badge">À faire maintenant</span>Génération ${g}</h3>${meta}</header>
+          <p class="intro">Rends les parents féconds en enclos (endurance, maturité et amour à 20 000), puis accouple un mâle et une femelle depuis l'étable.</p>
+          ${tasks}</div></div>`;
       }
-    });
-    html += `<p class="small muted">Les quantités sont des moyennes. Les bébés ratés ne sont pas comptés alors qu'ils servent souvent de parents ou de matière à cloner : en pratique, il t'en faudra un peu moins.</p>`;
+      return `<div class="phase" id="phase-${g}"><span class="dot">${g}</span><details class="phase-body"><summary><h3>Génération ${g}</h3>${meta}</summary>${tasks}</details></div>`;
+    }).join("")}</div>
+    <p class="small muted">Quantités moyennes. Les bébés ratés ne sont pas comptés alors qu'ils servent souvent de parents ou de matière à cloner : en pratique, il t'en faudra un peu moins.</p>`;
     el.innerHTML = html;
   }
 
-  /* ---------- Mémo ---------- */
+  /* ---------- Aide ---------- */
   function renderMemo() {
     const today = new Date();
     const almanax = [
@@ -507,113 +625,124 @@ footer { color: var(--muted); font-size: .85rem; display: grid; gap: 4px; }
     const nextMonth = today.getDate() <= 10 ? today.getMonth() : (today.getMonth() + 1) % 12;
     const genetons = [[1, 2], [2, 4], [3, 8], [4, 16], [5, 30], [6, 60], [7, 120], [8, 240], [9, 500]];
     $("memo").innerHTML = `
-      <details class="panel"><summary class="linkish">Comment marche un accouplement ?</summary>
-        <ol>
-          <li>Capture des montures sauvages : elles sont directement de génération 1.</li>
-          <li>Place-les en enclos et remplis leurs jauges d'endurance, de maturité et d'amour jusqu'à 20 000 : elles deviennent fécondes.</li>
-          <li>À l'étable, accouple un mâle et une femelle féconds du même type. Le bébé naît tout de suite.</li>
-          <li>Si les parents correspondent à une recette, le bébé a une chance (affichée en jeu) d'être de la génération supérieure. Sinon, il reprend une couleur de ses parents ou grands-parents.</li>
-          <li>Les deux parents deviennent stériles. Clone deux stériles de même génération pour récupérer une monture fertile.</li>
-        </ol></details>
-      <details class="panel"><summary class="linkish">8 astuces pour aller plus vite</summary>
-        <ol class="tips">
-          <li><span><b>Monte les parents avant les croisements chers.</b> Deux parents niveau 100 donnent 60 %, niveau 200 donnent 90 %, et 100 % avec une Optimakina. Sur les étapes 8, 9 et 10, un échec coûte des dizaines de captures.</span></li>
-          <li><span><b>Varie les recettes des couleurs pures.</b> Muldos et Volkornes ont plusieurs croisements pour une même couleur pure : varier les bicolores fait naître des montures différentes, et chaque naissance coche un succès. Le plan le fait pour toi.</span></li>
-          <li><span><b>Ne jette pas les stériles.</b> Le clonage conserve genre, généalogie et sérénité ; seules les jauges repartent à zéro. Garde l'extraction pour les vrais surplus.</span></li>
-          <li><span><b>Garde les bébés ratés.</b> Ils reprennent une couleur de l'arbre : parent de rechange ou moitié de clone.</span></li>
-          <li><span><b>Équilibre les sexes.</b> Sur les couleurs rares, l'Animakina choisit le sexe du bébé.</span></li>
-          <li><span><b>Garde les accouplements de génération 9 et 10 pour Takeza.</b> +20 % de chances ce jour-là.</span></li>
-          <li><span><b>Remplis les jauges deux par deux.</b> Entre -2 000 et -1 de sérénité, la monture gagne endurance et maturité ; entre 0 et 2 000, maturité et amour.</span></li>
-          <li><span><b>Mets les Reproductrices sur les croisements chers.</b> Cette capacité (3 % à la naissance) donne un bébé de plus.</span></li>
-        </ol></details>
-      <details class="panel"><summary class="linkish">Ce qui a changé en 3.5, 3.6 et 3.7</summary>
-        <div class="grid2">
-          <div><h3>3.5 · Refonte</h3><ul>
-            <li>Les montures d'avant la 3.5 sont séniles : montables, mais ni accouplables ni clonables.</li>
-            <li>Capture directe en génération 1, plus de gestation ni de fatigue, un bébé par accouplement, parents stériles ensuite.</li>
-            <li>La généalogie s'arrête aux grands-parents.</li>
-            <li>Métier Éleveur : 6 enclos de 10 places, filets et carburants.</li>
-            <li>4 nouveaux Muldos de génération 9 (Ambre, Azur, Corail, Aigue-marine) : 54 montures ajoutées aux succès.</li>
-            <li>Les succès de génération commencent à la génération 2.</li>
-          </ul></div>
-          <div><h3>3.6 et 3.7</h3><ul>
-            <li>3.6 : nouvelle apparence des Muldos et Volkornes.</li>
-            <li>3.7 : jauges d'enclos doublées.</li>
-            <li>3.7 : Optimakina passée de +10 % à +20 %.</li>
-            <li>3.7 : icône des montures manquantes aux succès.</li>
-          </ul></div>
-        </div></details>
-      <details class="panel"><summary class="linkish">Tableaux : génétons et Almanax d'élevage</summary>
-        <div class="grid2">
-          <div><p class="small muted">Génétons gagnés par parent quand le bébé dépasse toute la généalogie.</p>
-            <div class="tbl-wrap"><table><thead><tr><th>Génération</th><th class="r">Génétons</th></tr></thead>
-            <tbody>${genetons.map(([g, n]) => `<tr><td>${g}</td><td class="r num">${n}</td></tr>`).join("")}</tbody></table></div></div>
-          <div><p class="small muted">Bonus du 10 de chaque mois. Takeza (+20 %) tombe à une date variable.</p>
-            <div class="tbl-wrap"><table><thead><tr><th>Mois</th><th>Effet</th></tr></thead>
-            <tbody>${almanax.map(([mo, fx], i) => `<tr class="${i === nextMonth ? "hl" : ""}"><td>${mo}</td><td>${fx}${i === nextMonth ? " · prochain" : ""}</td></tr>`).join("")}</tbody></table></div></div>
-        </div></details>
-      <details class="panel"><summary class="linkish">Sauvegarder ou transférer ma progression</summary>
-        <p class="small muted">Ta progression est enregistrée dans ce navigateur. Pour la passer sur un autre appareil, copie ce code puis colle-le là-bas et clique sur « Importer ».</p>
-        <textarea id="saveCode" spellcheck="false" aria-label="Code de sauvegarde"></textarea>
-        <div class="row"><button type="button" class="btn small" data-act="copy">Copier</button><button type="button" class="btn small" data-act="import">Importer</button><span class="small muted" id="saveMsg"></span></div>
-      </details>
-      <details class="panel"><summary class="linkish">Sources</summary><ul>
+      <details><summary>Comment marche un accouplement ?</summary><div class="in"><ol>
+        <li>Capture des montures sauvages : elles sont directement de génération 1.</li>
+        <li>Place-les en enclos et remplis leurs jauges d'endurance, de maturité et d'amour jusqu'à 20 000 : elles deviennent fécondes.</li>
+        <li>À l'étable, accouple un mâle et une femelle féconds du même type. Le bébé naît tout de suite.</li>
+        <li>Si les parents correspondent à une recette, le bébé a une chance (affichée en jeu) d'être de la génération supérieure. Sinon, il reprend une couleur de ses parents ou grands-parents.</li>
+        <li>Les deux parents deviennent stériles. Clone deux stériles de même génération pour récupérer une monture fertile.</li>
+      </ol></div></details>
+      <details><summary>8 astuces pour aller plus vite</summary><div class="in"><ol class="tips">
+        <li><span><b>Monte les parents avant les croisements chers.</b> Deux parents niveau 100 donnent 60 %, niveau 200 donnent 90 %, et 100 % avec une Optimakina.</span></li>
+        <li><span><b>Varie les recettes des couleurs pures.</b> Muldos et Volkornes ont plusieurs croisements par couleur pure : varier les bicolores fait naître des montures différentes, et chaque naissance coche un succès. Le plan le fait pour toi.</span></li>
+        <li><span><b>Ne jette pas les stériles.</b> Le clonage conserve genre, généalogie et sérénité ; seules les jauges repartent à zéro.</span></li>
+        <li><span><b>Garde les bébés ratés.</b> Ils reprennent une couleur de l'arbre : parent de rechange ou moitié de clone.</span></li>
+        <li><span><b>Équilibre les sexes.</b> Sur les couleurs rares, l'Animakina choisit le sexe du bébé.</span></li>
+        <li><span><b>Garde les générations 9 et 10 pour Takeza.</b> +20 % de chances ce jour-là.</span></li>
+        <li><span><b>Remplis les jauges deux par deux.</b> Entre -2 000 et -1 de sérénité : endurance et maturité. Entre 0 et 2 000 : maturité et amour.</span></li>
+        <li><span><b>Mets les Reproductrices sur les croisements chers.</b> Cette capacité (3 % à la naissance) donne un bébé de plus.</span></li>
+      </ol></div></details>
+      <details><summary>Ce qui a changé en 3.5, 3.6 et 3.7</summary><div class="in"><div class="cols">
+        <div><h3>3.5 · Refonte</h3><ul>
+          <li>Les montures d'avant la 3.5 sont séniles : montables, mais ni accouplables ni clonables.</li>
+          <li>Capture directe en génération 1, plus de gestation ni de fatigue, un bébé par accouplement, parents stériles ensuite.</li>
+          <li>La généalogie s'arrête aux grands-parents.</li>
+          <li>Métier Éleveur : 6 enclos de 10 places, filets et carburants.</li>
+          <li>4 nouveaux Muldos de génération 9 (Ambre, Azur, Corail, Aigue-marine) : 54 montures ajoutées aux succès.</li>
+          <li>Les succès de génération commencent à la génération 2.</li></ul></div>
+        <div><h3>3.6 et 3.7</h3><ul>
+          <li>3.6 : nouvelle apparence des Muldos et Volkornes.</li>
+          <li>3.7 : jauges d'enclos doublées.</li>
+          <li>3.7 : Optimakina passée de +10 % à +20 %.</li>
+          <li>3.7 : icône des montures manquantes aux succès.</li></ul></div>
+      </div></div></details>
+      <details><summary>Génétons et Almanax d'élevage</summary><div class="in"><div class="cols">
+        <div><p class="small muted">Génétons gagnés par parent quand le bébé dépasse toute la généalogie.</p>
+          <div class="tbl-wrap"><table><thead><tr><th>Génération</th><th class="r">Génétons</th></tr></thead>
+          <tbody>${genetons.map(([g, n]) => `<tr><td>${g}</td><td class="r num">${n}</td></tr>`).join("")}</tbody></table></div></div>
+        <div><p class="small muted">Bonus du 10 de chaque mois. Takeza (+20 %) tombe à une date variable.</p>
+          <div class="tbl-wrap"><table><thead><tr><th>Mois</th><th>Effet</th></tr></thead>
+          <tbody>${almanax.map(([mo, fx], i) => `<tr class="${i === nextMonth ? "hl" : ""}"><td>${mo}</td><td>${fx}${i === nextMonth ? " · prochain" : ""}</td></tr>`).join("")}</tbody></table></div></div>
+      </div></div></details>
+      <details id="saveBox"><summary>Sauvegarder ou transférer ma progression</summary><div class="in">
+        <p class="small muted">Ta progression est enregistrée automatiquement dans ce navigateur. Pour la mettre à l'abri ou la passer sur un autre appareil, télécharge un fichier de sauvegarde, puis importe-le là-bas.</p>
+        <div class="row"><button type="button" class="btn sm primary" data-act="export">Télécharger ma sauvegarde</button>
+          <label class="btn sm" for="importFile">Importer un fichier</label><input type="file" id="importFile" accept=".json,application/json" hidden></div>
+        <details class="adv"><summary>Utiliser un code à copier-coller</summary>
+          <textarea id="saveCode" spellcheck="false" aria-label="Code de sauvegarde"></textarea>
+          <div class="row" style="margin-top:8px"><button type="button" class="btn sm" data-act="copy">Copier</button><button type="button" class="btn sm" data-act="import">Importer ce code</button></div>
+        </details>
+        <span class="small muted" id="saveMsg" role="status"></span>
+      </div></details>
+      <details><summary>Sources</summary><div class="in"><ul>
         <li><a href="https://www.dofuspourlesnoobs.com/guide-de-l-eleveur.html" target="_blank" rel="noopener">Guide de l'éleveur, édition 2026</a></li>
         <li><a href="https://www.dofuspourlesnoobs.com/mise-a-jour-305.html" target="_blank" rel="noopener">Présentation de la mise à jour 3.5</a></li>
         <li><a href="https://dragodinde.fr/" target="_blank" rel="noopener">dragodinde.fr</a> (recettes) et <a href="https://dofusdb.fr/fr/tools/breeding/crossing/dragodinde" target="_blank" rel="noopener">DofusDB</a> (noms)</li>
-      </ul></details>`;
-    $("saveCode").value = JSON.stringify({ born: state.born, stock: state.stock });
+      </ul></div></details>`;
+    refreshSaveCode();
   }
+  const refreshSaveCode = () => { const c = $("saveCode"); if (c) c.value = JSON.stringify({ born: state.born, stock: state.stock }); };
 
   /* ---------- Rendu et événements ---------- */
   function render() {
-    renderFamilies(); renderProgress(); renderConditions(); renderPlan();
-    const code = $("saveCode");
-    if (code) code.value = JSON.stringify({ born: state.born, stock: state.stock });
+    const pl = plan(state.family);
+    renderFamilies(); renderHero(pl); renderProgress(); renderConditions(); renderPlan(pl); refreshSaveCode();
   }
   const update = () => { save(); render(); };
+  const softUpdate = () => { save(); const pl = plan(state.family); renderFamilies(); renderHero(pl); renderPlan(pl); refreshSaveCode(); };
 
   let toastTimer = null, undo = null;
   function toast(msg, undoFn) {
     const t = $("toast");
-    undo = undoFn;
+    undo = undoFn || null;
     t.innerHTML = `<span>${esc(msg)}</span>${undoFn ? '<button type="button" data-act="undo">Annuler</button>' : ""}`;
     t.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { t.hidden = true; }, 5000);
   }
-  $("toast").addEventListener("click", (e) => {
-    if (e.target.closest("[data-act=undo]") && undo) { undo(); undo = null; $("toast").hidden = true; }
-  });
 
-  function toggleBorn(id, fromPlan) {
-    const fam = state.family, m = index[fam][id];
-    const wasBorn = !!state.born[fam][id];
-    if (wasBorn) delete state.born[fam][id]; else state.born[fam][id] = true;
-    update();
-    if (fromPlan) toast(`${m.name} cochée comme née.`, () => { delete state.born[fam][id]; update(); });
+  function applyImport(v) {
+    if (!v || typeof v.born !== "object" || typeof v.stock !== "object") throw new Error("format");
+    state.born = { ...defaults().born, ...v.born }; state.stock = { ...defaults().stock, ...v.stock };
+    update(); $("saveMsg").textContent = "Progression importée."; toast("Progression importée.");
   }
 
   document.addEventListener("click", (e) => {
     const famBtn = e.target.closest("[data-fam]");
     if (famBtn) { state.family = famBtn.dataset.fam; state.openGen = firstOpenGen(state.family); return update(); }
     const bornBtn = e.target.closest("[data-born]");
-    if (bornBtn) return toggleBorn(bornBtn.dataset.born, !!bornBtn.closest("#plan"));
-    const gen = e.target.closest(".rung[data-gen]");
-    if (gen) { const g = Number(gen.dataset.gen); state.openGen = state.openGen === g ? null : g; return update(); }
+    if (bornBtn) {
+      const fam = state.family, id = bornBtn.dataset.born, m = index[fam][id];
+      const fromPlan = !!bornBtn.closest("#planBody");
+      if (state.born[fam][id]) delete state.born[fam][id]; else state.born[fam][id] = true;
+      update();
+      if (fromPlan) toast(`${m.name} : naissance enregistrée.`, () => { delete state.born[fam][id]; update(); });
+      return;
+    }
+    const step = e.target.closest("[data-step]");
+    if (step) {
+      const fam = state.family, id = step.dataset.step;
+      const v = Math.max(0, (Number(state.stock[fam][id]) || 0) + Number(step.dataset.d));
+      if (v) state.stock[fam][id] = v; else delete state.stock[fam][id];
+      const input = $(`stock-${fam}-${id}`); if (input) input.value = v;
+      return softUpdate();
+    }
+    const gen = e.target.closest(".gen[data-gen]");
+    if (gen) { state.openGen = Number(gen.dataset.gen); return update(); }
     const lvl = e.target.closest("[data-level]");
     if (lvl) { state.level = Number(lvl.dataset.level); return update(); }
     const a = e.target.closest("[data-act]");
     if (!a) return;
     const fam = state.family;
     switch (a.dataset.act) {
+      case "undo": if (undo) { undo(); undo = null; } $("toast").hidden = true; break;
       case "upto": {
         const g = Number($("upTo").value);
         const before = JSON.parse(JSON.stringify(state.born[fam]));
         DATA[fam].forEach((m) => { if (m.gen >= 2 && m.gen <= g) state.born[fam][m.id] = true; });
         state.openGen = firstOpenGen(fam);
         update();
-        if (g >= 2) toast(`Générations 2 à ${g} cochées.`, () => { state.born[fam] = before; update(); });
+        toast(`Générations 2 à ${g} cochées.`, () => { state.born[fam] = before; update(); });
         break;
       }
       case "gen-all": {
@@ -621,57 +750,62 @@ footer { color: var(--muted); font-size: .85rem; display: grid; gap: 4px; }
         list.forEach((m) => { if (all) delete state.born[fam][m.id]; else state.born[fam][m.id] = true; });
         update(); break;
       }
-      case "close": state.openGen = null; update(); break;
+      case "export": {
+        const blob = new Blob([JSON.stringify({ app: "registre-gen10", date: new Date().toISOString(), born: state.born, stock: state.stock }, null, 1)], { type: "application/json" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `registre-gen10-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        $("saveMsg").textContent = "Si rien ne se télécharge, utilise le code à copier-coller ci-dessus.";
+        break;
+      }
       case "copy": {
         const ta = $("saveCode");
         navigator.clipboard.writeText(ta.value).then(() => { $("saveMsg").textContent = "Code copié."; })
           .catch(() => { ta.select(); $("saveMsg").textContent = "Copie bloquée : le code est sélectionné, fais Ctrl+C."; });
         break;
       }
-      case "import": {
-        try {
-          const v = JSON.parse($("saveCode").value);
-          if (!v.born || !v.stock) throw new Error("format");
-          state.born = { ...defaults().born, ...v.born }; state.stock = { ...defaults().stock, ...v.stock };
-          update(); renderMemo(); $("saveMsg").textContent = "Progression importée.";
-        } catch (err) {
-          $("saveMsg").textContent = "Code illisible : colle le code complet copié depuis un autre navigateur.";
-        }
+      case "import":
+        try { applyImport(JSON.parse($("saveCode").value)); }
+        catch (err) { $("saveMsg").textContent = "Code illisible : colle le code complet copié depuis un autre navigateur."; }
         break;
-      }
     }
   });
 
   document.addEventListener("input", (e) => {
-    if (e.target.id === "level") {
-      state.level = Number(e.target.value);
-      save(); renderPlan();
-      // Mise à jour légère pour ne pas casser le glissement du curseur.
-      const o = odds();
-      document.querySelector("#conditions .big").textContent = `${fmt1.format(o.p * 100)} %`;
-      document.querySelector('label[for="level"] .num').textContent = state.level;
-      document.querySelectorAll("[data-level]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.level) === state.level)));
-    }
+    if (e.target.id !== "level") return;
+    state.level = Number(e.target.value);
+    $("levelOut").textContent = state.level;
+    document.querySelectorAll("[data-level]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.level) === state.level)));
+    renderGauge(); softUpdate();
   });
   document.addEventListener("change", (e) => {
     const t = e.target;
-    if (t.id === "level") return renderConditions();
     if (["opti", "takeza", "clone"].includes(t.id)) { state[t.id] = t.checked; return update(); }
+    if (t.id === "showStock") { state.showStock = t.checked; if (!t.checked && state.openGen === 1) state.openGen = firstOpenGen(state.family); return update(); }
     if (t.id === "optiVal") { state.optiVal = Number(t.value); return update(); }
     if (t.id === "genMin") { state.genMin = Number(t.value); if (state.genMax < state.genMin) state.genMax = state.genMin; return update(); }
     if (t.id === "genMax") { state.genMax = Number(t.value); if (state.genMin > state.genMax) state.genMin = state.genMax; return update(); }
+    if (t.id === "importFile" && t.files && t.files[0]) {
+      t.files[0].text().then((txt) => applyImport(JSON.parse(txt)))
+        .catch(() => { $("saveMsg").textContent = "Fichier illisible : choisis un fichier de sauvegarde téléchargé depuis ce site."; });
+      t.value = "";
+      return;
+    }
     const s = t.closest("[data-stock]");
     if (s) {
       const v = Math.max(0, Math.floor(Number(s.value) || 0));
+      s.value = v;
       if (v) state.stock[state.family][s.dataset.stock] = v; else delete state.stock[state.family][s.dataset.stock];
-      save(); renderPlan();
+      softUpdate();
     }
   });
   document.addEventListener("toggle", (e) => {
-    if (e.target.id === "stockDetails") { state.showStock = e.target.open; save(); }
+    if (e.target.id === "advDetails") { state.advOpen = e.target.open; save(); }
   }, true);
 
-  if (state.openGen == null) state.openGen = firstOpenGen(state.family);
+  if (state.openGen == null || (state.openGen === 1 && !state.showStock)) state.openGen = firstOpenGen(state.family);
   render();
   renderMemo();
 })();
