@@ -20,6 +20,7 @@
   --good-soft: #dcefe1;
   --info: #2c6a9a;
   --rare: #7a4da6;
+  --love: #c2477a;
   --font-display: "Alegreya", Georgia, "Times New Roman", serif;
   --font-body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, Consolas, monospace;
@@ -31,14 +32,14 @@
   :root:not([data-theme="light"]) {
     --bg: #121814; --surface: #1a221d; --sunken: #0f1411; --ink: #e6ebe3; --muted: #9ba89e; --line: #2c3830;
     --accent: #e8a94e; --accent-ink: #1a1307; --accent-soft: #382a15; --good: #6dc58c; --good-soft: #1b3324;
-    --info: #6fb0e0; --rare: #b993e0; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 6px 20px rgb(0 0 0 / .25);
+    --info: #6fb0e0; --rare: #b993e0; --love: #e57fa9; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 6px 20px rgb(0 0 0 / .25);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #121814; --surface: #1a221d; --sunken: #0f1411; --ink: #e6ebe3; --muted: #9ba89e; --line: #2c3830;
   --accent: #e8a94e; --accent-ink: #1a1307; --accent-soft: #382a15; --good: #6dc58c; --good-soft: #1b3324;
-  --info: #6fb0e0; --rare: #b993e0; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 6px 20px rgb(0 0 0 / .25);
+  --info: #6fb0e0; --rare: #b993e0; --love: #e57fa9; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 6px 20px rgb(0 0 0 / .25);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -102,11 +103,12 @@ main .wrap { display: grid; gap: var(--s8); padding-block: var(--s7) var(--s8); 
 .ring .lbl b { font-family: var(--font-display); font-size: 2rem; font-weight: 800; line-height: 1; }
 .ring .lbl span { font-size: .8rem; color: var(--muted); }
 @media (max-width: 640px) { .hero { grid-template-columns: minmax(0, 1fr); padding: var(--s5); } .ring { width: 120px; height: 120px; order: -1; } }
-.howto { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); margin-top: calc(var(--s5) * -1 - var(--s4)); }
+.howto { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s3); margin-top: calc(var(--s5) * -1 - var(--s4)); }
 .howto a { display: flex; gap: var(--s3); align-items: center; text-decoration: none; color: var(--ink); padding: var(--s3) var(--s4); border-radius: var(--radius-sm); }
 .howto a:hover { background: var(--surface); }
 .howto .k { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); font-weight: 800; flex: none; font-family: var(--font-display); }
 .howto a.done .k { background: var(--good); color: var(--surface); }
+@media (max-width: 900px) { .howto { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .howto { grid-template-columns: minmax(0, 1fr); gap: 0; } }
 
 /* Étapes */
@@ -249,6 +251,46 @@ details.adv[open] > summary { margin-bottom: var(--s4); }
 .sw { width: 26px; height: 26px; border-radius: 50%; flex: none; border: 1px solid rgb(0 0 0 / .22); display: inline-block; }
 .sw.lg { width: 38px; height: 38px; }
 
+/* 4. Enclos */
+.pen-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s3); }
+@media (max-width: 760px) { .pen-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pen-stats .stat b { font-size: 1.45rem; }
+.scale { display: grid; gap: 6px; }
+.scale .ln { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: var(--s3); align-items: center; font-size: .85rem; font-weight: 700; }
+.scale .tr { position: relative; height: 14px; background: var(--sunken); border-radius: 999px; }
+.scale .tr i { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
+.scale .tr .zone-hl { background: var(--ink); opacity: .1; border-radius: 4px; top: -4px; bottom: -4px; }
+.scale .axis { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: var(--s3); }
+.scale .axis div { position: relative; height: 18px; font-size: .75rem; color: var(--muted); font-family: var(--font-data); }
+.scale .axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.scale .axis span:first-child { transform: none; }
+.scale .axis span:last-child { transform: translateX(-100%); }
+@media (max-width: 480px) { .scale .ln, .scale .axis { grid-template-columns: 70px minmax(0, 1fr); } }
+.g-end { background: var(--info); }
+.g-mat { background: var(--good); }
+.g-amo { background: var(--love); }
+.g-ser { background: var(--muted); }
+.g-xp { background: var(--accent); }
+.zones { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
+@media (max-width: 640px) { .zones { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.zones button { border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: var(--s3); cursor: pointer; text-align: left; display: grid; gap: 2px; }
+.zones button b { font-size: .95rem; }
+.zones button span { font-size: .8rem; color: var(--muted); font-family: var(--font-data); }
+.zones button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--surface); }
+.routine { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); counter-reset: ph; }
+.routine li { counter-increment: ph; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: var(--s2) var(--s4); align-items: center; background: var(--bg); border-radius: var(--radius-sm); padding: var(--s4); }
+.routine li::before { content: counter(ph); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); font-weight: 800; font-family: var(--font-display); }
+.routine .what { display: grid; gap: 6px; min-width: 0; }
+.routine .dur { font-family: var(--font-data); text-align: right; white-space: nowrap; }
+.routine .dur small { display: block; color: var(--muted); font-family: var(--font-body); font-size: .75rem; }
+@media (max-width: 560px) { .routine li { grid-template-columns: 36px minmax(0, 1fr); } .routine .dur { grid-column: 2; text-align: left; } }
+.jauges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.jg { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 6px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-weight: 700; font-size: .88rem; }
+.jg i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.pen-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s4); }
+.pen-form .field small { color: var(--muted); font-size: .85rem; }
+.pen-form input[type="number"] { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; width: 120px; }
+
 /* Aide */
 .acc { display: grid; gap: var(--s3); }
 .acc details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
@@ -314,6 +356,13 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       <div class="step" id="planBody"></div>
     </section>
 
+    <section class="step" id="enclos" aria-labelledby="h-enclos">
+      <div class="step-head"><span class="k" aria-hidden="true">4</span><div>
+        <h2 id="h-enclos">Prépare tes parents en enclos</h2>
+        <p>Pour être féconde, une monture doit avoir 20 000 en endurance, en maturité et en amour. Les jauges qui montent dépendent de sa sérénité : voici dans quel ordre activer les jauges d'enclos pour aller au plus vite.</p></div></div>
+      <div class="step" id="pens"></div>
+    </section>
+
     <section class="step" id="aide" aria-labelledby="h-aide">
       <div class="step-head"><span class="k" aria-hidden="true">?</span><div>
         <h2 id="h-aide">Comprendre et aller plus vite</h2>
@@ -355,6 +404,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   const defaults = () => ({
     family: "dragodinde", level: 100, opti: false, optiVal: 20, takeza: false, clone: true,
     genMin: 2, genMax: 10, openGen: null, showStock: false,
+    pens: 3, rate: 20, zone: "neg", penCount: null,
     born: { dragodinde: {}, muldo: {}, volkorne: {} }, stock: { dragodinde: {}, muldo: {}, volkorne: {} },
   });
   let state = defaults();
@@ -468,7 +518,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="12"></circle>
         <circle class="val" cx="60" cy="60" r="52" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct)}"></circle></svg>
         <div class="lbl"><b>${Math.round(pct * 100)} %</b><span class="num">${t.n} / ${t.tot} nées</span></div></div>`;
-    const steps = [["registre", "Coche ce qui est né", anyBorn], ["conditions", "Règle tes conditions", false], ["plan", "Suis le plan", false]];
+    const steps = [["registre", "Coche ce qui est né", anyBorn], ["conditions", "Règle tes conditions", false], ["plan", "Suis le plan", false], ["enclos", "Prépare tes enclos", false]];
     $("howto").innerHTML = steps.map(([id, l, d], i) => `<a href="#${id}" class="${d ? "done" : ""}"><span class="k">${d ? "✓" : i + 1}</span><span>${l}</span></a>`).join("");
   }
 
@@ -610,13 +660,112 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       if (gi === 0) {
         return `<div class="phase now" id="phase-${g}"><span class="dot">${g}</span><div class="phase-body">
           <header><h3><span class="badge">À faire maintenant</span>Génération ${g}</h3>${meta}</header>
-          <p class="intro">Rends les parents féconds en enclos (endurance, maturité et amour à 20 000), puis accouple un mâle et une femelle depuis l'étable.</p>
+          <p class="intro">Rends les parents féconds en enclos (<a href="#enclos">routine à l'étape 4</a>), puis accouple un mâle et une femelle depuis l'étable.</p>
           ${tasks}</div></div>`;
       }
       return `<div class="phase" id="phase-${g}"><span class="dot">${g}</span><details class="phase-body"><summary><h3>Génération ${g}</h3>${meta}</summary>${tasks}</details></div>`;
     }).join("")}</div>
     <p class="small muted">Quantités moyennes. Les bébés ratés ne sont pas comptés alors qu'ils servent souvent de parents ou de matière à cloner : en pratique, il t'en faudra un peu moins.</p>`;
     el.innerHTML = html;
+  }
+
+  /* ---------- 4. Enclos ---------- */
+  const JAUGES = {
+    end: ["Endurance", "g-end"], mat: ["Maturité", "g-mat"], amo: ["Amour", "g-amo"],
+    serUp: ["Sérénité +", "g-ser"], serDown: ["Sérénité −", "g-ser"], xp: ["Expérience", "g-xp"],
+  };
+  const RATES = [[10, "0 à 80 000", "Tier 1"], [20, "80 001 à 140 000", "Tier 2"], [30, "140 001 à 180 000", "Tier 3"], [40, "180 001 à 200 000", "Tier 4"]];
+  // Routines par zone de sérénité de départ. pts = points que la jauge d'enclos doit débiter pendant la phase.
+  const ZONES = {
+    tresNeg: { label: "Très négative", range: "-5 000 à -2 001", from: -5000, to: -2001, phases: [
+      { j: ["end", "serUp"], pts: 2000, goal: "Remonte la sérénité vers -1 000. L'endurance progresse en même temps." },
+      { j: ["end", "mat"], pts: 20000, goal: "Endurance et maturité jusqu'à 20 000." },
+      { j: ["serUp", "xp"], pts: 1500, goal: "Passe la sérénité au-dessus de 0, vers +500." },
+      { j: ["amo", "xp"], pts: 20000, goal: "Amour jusqu'à 20 000 : la monture est féconde." },
+    ] },
+    neg: { label: "Négative", range: "-2 000 à -1", from: -2000, to: -1, phases: [
+      { j: ["end", "mat"], pts: 20000, goal: "Endurance et maturité jusqu'à 20 000." },
+      { j: ["serUp", "xp"], pts: 1000, goal: "Passe la sérénité au-dessus de 0, vers +500." },
+      { j: ["amo", "xp"], pts: 20000, goal: "Amour jusqu'à 20 000 : la monture est féconde." },
+    ] },
+    pos: { label: "Positive", range: "0 à 2 000", from: 0, to: 2000, phases: [
+      { j: ["mat", "amo"], pts: 20000, goal: "Maturité et amour jusqu'à 20 000." },
+      { j: ["serDown", "xp"], pts: 1000, goal: "Passe la sérénité sous 0, vers -500." },
+      { j: ["end", "xp"], pts: 20000, goal: "Endurance jusqu'à 20 000 : la monture est féconde." },
+    ] },
+    tresPos: { label: "Très positive", range: "2 001 à 5 000", from: 2001, to: 5000, phases: [
+      { j: ["amo", "serDown"], pts: 2000, goal: "Redescends la sérénité vers +1 000. L'amour progresse en même temps." },
+      { j: ["mat", "amo"], pts: 20000, goal: "Maturité et amour jusqu'à 20 000." },
+      { j: ["serDown", "xp"], pts: 1500, goal: "Passe la sérénité sous 0, vers -500." },
+      { j: ["end", "xp"], pts: 20000, goal: "Endurance jusqu'à 20 000 : la monture est féconde." },
+    ] },
+  };
+  const hours = (sec) => {
+    const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60);
+    return h ? `${h} h ${String(m).padStart(2, "0")}` : `${m} min`;
+  };
+  const jg = (k) => `<span class="jg"><i class="${JAUGES[k][1]}"></i>${JAUGES[k][0]}</span>`;
+  const pct = (v) => ((v + 5000) / 100);
+
+  function renderPens(pl) {
+    const fam = state.family;
+    const rate = Number(state.rate), pens = Number(state.pens);
+    const zone = ZONES[state.zone] || ZONES.neg;
+    const rows = Object.values(pl.result);
+    const firstGen = Object.keys(pl.result).length ? Math.min(...Object.keys(pl.result).map((id) => index[fam][id].gen)) : null;
+    const nextBreed = firstGen ? Object.entries(pl.result).filter(([id]) => index[fam][id].gen === firstGen).reduce((s, [, r]) => s + r.breedings, 0) : 0;
+    const autoCount = Math.ceil(nextBreed * 2 - 1e-9);
+    const count = state.penCount != null ? state.penCount : autoCount;
+    const phaseSec = zone.phases.map((ph) => (ph.pts / rate) * 10);
+    const waveSec = phaseSec.reduce((a, b) => a + b, 0);
+    const waves = Math.max(1, Math.ceil(count / (10 * pens)));
+    const fuel = zone.phases.reduce((s, ph) => s + ph.pts * ph.j.filter((k) => k !== "xp").length, 0);
+    const xpFuel = zone.phases.reduce((s, ph) => s + (ph.j.includes("xp") ? ph.pts : 0), 0);
+    const axis = [-5000, -2000, 0, 2000, 5000];
+    const hl = `<i class="zone-hl" style="left:${pct(zone.from)}%;width:${pct(zone.to) - pct(zone.from)}%"></i>`;
+    $("pens").innerHTML = `
+      <div class="card">
+        <div class="pen-form">
+          <div class="field"><label for="pens">Enclos disponibles</label>
+            <select id="pens">${[1, 2, 3, 4, 5, 6].map((n) => `<option value="${n}" ${n === pens ? "selected" : ""}>${n} enclos (${n * 10} places)</option>`).join("")}</select>
+            <small>Un enclos au niveau 1 du métier Éleveur, puis un de plus tous les 40 niveaux.</small></div>
+          <div class="field"><label for="rate">Remplissage de tes jauges d'enclos</label>
+            <select id="rate">${RATES.map(([r, range, t]) => `<option value="${r}" ${r === rate ? "selected" : ""}>${t} : ${range} (${r} pts / 10 s)</option>`).join("")}</select>
+            <small>Plus la jauge est pleine, plus elle débite vite. Garde-la au-dessus de 180 000 pour aller 4 fois plus vite qu'en tier 1.</small></div>
+          <div class="field"><label for="penCount">Montures à rendre fécondes</label>
+            <span class="row"><input type="number" id="penCount" min="1" step="1" value="${count}">
+            ${state.penCount != null ? `<button type="button" class="btn sm ghost" data-act="pen-auto">Revenir au calcul auto</button>` : ""}</span>
+            <small>${firstGen ? `Calculé pour la prochaine étape du plan (génération ${firstGen}) : 2 parents par accouplement.` : "Aucune étape restante dans le plan : saisis un nombre."}</small></div>
+        </div>
+      </div>
+      <div class="pen-stats">
+        <div class="stat"><b>${hours(waveSec)}</b><span>par vague, enclos en parallèle</span></div>
+        <div class="stat"><b>${fmt0.format(waves)}</b><span>${plural(waves, "vague")} de ${10 * pens} montures</span></div>
+        <div class="stat"><b>${hours(waveSec * waves)}</b><span>de jauges au total</span></div>
+        <div class="stat"><b>${fmt0.format(Math.round(fuel / 10))}</b><span>points de carburant par monture (enclos plein)</span></div>
+      </div>
+      <div class="card">
+        <div class="row between"><h3>Quelle est la sérénité de tes montures ?</h3><span class="small muted">Regarde-la dans l'étable, puis choisis le groupe</span></div>
+        <div class="scale" aria-label="Jauges qui progressent selon la sérénité">
+          <div class="ln"><span>Endurance</span><span class="tr">${hl}<i class="g-end" style="left:0;width:${pct(-1)}%"></i></span></div>
+          <div class="ln"><span>Maturité</span><span class="tr">${hl}<i class="g-mat" style="left:${pct(-2000)}%;width:${pct(2000) - pct(-2000)}%"></i></span></div>
+          <div class="ln"><span>Amour</span><span class="tr">${hl}<i class="g-amo" style="left:${pct(0)}%;width:${100 - pct(0)}%"></i></span></div>
+          <div class="axis"><span></span><div>${axis.map((v) => `<span style="left:${pct(v)}%">${v > 0 ? "+" : ""}${fmt0.format(v)}</span>`).join("")}</div></div>
+        </div>
+        <div class="zones" role="group" aria-label="Sérénité de départ">${Object.entries(ZONES).map(([k, z]) =>
+          `<button type="button" data-zone="${k}" aria-pressed="${state.zone === k}"><b>${z.label}</b><span>${z.range}</span></button>`).join("")}</div>
+        <ol class="routine">${zone.phases.map((ph, i) => `<li>
+          <div class="what"><span class="jauges"><span class="small muted">Active</span>${ph.j.map(jg).join('<span class="muted">+</span>')}</span><span>${ph.goal}</span></div>
+          <span class="dur">≈ ${hours(phaseSec[i])}<small>${fmt0.format(ph.pts)} pts</small></span></li>`).join("")}</ol>
+        <p class="small muted">Durées pour une jauge d'enclos au ${RATES.find((r) => r[0] === rate)[2].toLowerCase()} (${rate} points toutes les 10 secondes). Carburant d'une vague par enclos : ≈ ${fmt0.format(fuel)} points de jauges utiles, plus ${fmt0.format(xpFuel)} d'expérience si tu actives la jauge d'XP (facultative, mais elle monte le niveau donc les chances de réussite).</p>
+      </div>
+      <div class="tip"><span class="ic">!</span><div style="display:grid;gap:8px">
+        <p><b>Remplis toujours tes enclos à 10.</b> Une jauge d'enclos se vide à la même vitesse avec 1 ou 10 montures : un enclos plein coûte 10 fois moins de carburant par monture.</p>
+        <p><b>Ne mélange pas les sérénités.</b> Toutes les montures d'un enclos reçoivent la même chose : regroupe les négatives ensemble et les positives ensemble, sinon une partie de l'enclos ne progresse pas. Le clonage conserve la sérénité, pas les jauges.</p>
+        <p><b>Profite de l'Almanax.</b> Le 10 janvier double la maturité, le 10 mars l'endurance, le 10 décembre l'amour, le 10 juin l'expérience, les 10 avril et 10 septembre la sérénité.</p>
+        <p><b>Regroupe les capacités.</b> Un enclos de montures Endurantes ou Amoureuses termine la phase concernée deux fois plus vite.</p>
+      </div></div>
+      <p class="small muted">Règles de sérénité et vitesses tirées des guides à jour de la 3.7. Le débit exact de la jauge de sérénité n'est pas documenté : vérifie la sérénité dans l'étable avant de changer de phase.</p>`;
   }
 
   /* ---------- Aide ---------- */
@@ -692,10 +841,10 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   /* ---------- Rendu et événements ---------- */
   function render() {
     const pl = plan(state.family);
-    renderFamilies(); renderHero(pl); renderProgress(); renderConditions(); renderPlan(pl); refreshSaveCode();
+    renderFamilies(); renderHero(pl); renderProgress(); renderConditions(); renderPlan(pl); renderPens(pl); refreshSaveCode();
   }
   const update = () => { save(); render(); };
-  const softUpdate = () => { save(); const pl = plan(state.family); renderFamilies(); renderHero(pl); renderPlan(pl); refreshSaveCode(); };
+  const softUpdate = () => { save(); const pl = plan(state.family); renderFamilies(); renderHero(pl); renderPlan(pl); renderPens(pl); refreshSaveCode(); };
 
   let toastTimer = null, undo = null;
   function toast(msg, undoFn) {
@@ -735,12 +884,15 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     }
     const gen = e.target.closest(".gen[data-gen]");
     if (gen) { state.openGen = Number(gen.dataset.gen); return update(); }
+    const zoneBtn = e.target.closest("[data-zone]");
+    if (zoneBtn) { state.zone = zoneBtn.dataset.zone; save(); return renderPens(plan(state.family)); }
     const lvl = e.target.closest("[data-level]");
     if (lvl) { state.level = Number(lvl.dataset.level); return update(); }
     const a = e.target.closest("[data-act]");
     if (!a) return;
     const fam = state.family;
     switch (a.dataset.act) {
+      case "pen-auto": state.penCount = null; save(); renderPens(plan(fam)); break;
       case "undo": if (undo) { undo(); undo = null; } $("toast").hidden = true; break;
       case "upto": {
         const g = Number($("upTo").value);
@@ -790,6 +942,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     const t = e.target;
     if (["opti", "takeza", "clone"].includes(t.id)) { state[t.id] = t.checked; return update(); }
     if (t.id === "showStock") { state.showStock = t.checked; if (!t.checked && state.openGen === 1) state.openGen = firstOpenGen(state.family); return update(); }
+    if (t.id === "pens" || t.id === "rate") { state[t.id] = Number(t.value); save(); return renderPens(plan(state.family)); }
+    if (t.id === "penCount") { const v = Math.max(1, Math.floor(Number(t.value) || 1)); state.penCount = v; save(); return renderPens(plan(state.family)); }
     if (t.id === "optiVal") { state.optiVal = Number(t.value); return update(); }
     if (t.id === "genMin") { state.genMin = Number(t.value); if (state.genMax < state.genMin) state.genMax = state.genMin; return update(); }
     if (t.id === "genMax") { state.genMax = Number(t.value); if (state.genMin > state.genMax) state.genMin = state.genMax; return update(); }
