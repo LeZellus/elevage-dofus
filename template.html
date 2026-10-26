@@ -147,6 +147,9 @@ main .wrap { padding-block: var(--s6) var(--s8); }
 .now-right .prog { width: 220px; }
 @media (max-width: 560px) { .now-right { justify-items: start; } }
 
+.pace-row { grid-column: 1 / -1; display: grid; gap: var(--s2); padding-top: var(--s4); border-top: 1px solid var(--line); }
+.path.tours { margin-top: calc(var(--s2) * -1); }
+
 /* Routine : étapes */
 .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
 .st { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -443,7 +446,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   const plural = (n, s, p = s + "s") => (n > 1 ? p : s);
 
   const defaults = () => ({
-    family: "dragodinde", level: 100, opti: false, optiVal: 20, takeza: false, clone: false, v: 2,
+    family: "dragodinde", level: 100, opti: false, optiVal: 20, takeza: false, pace: "equilibre", v: 3,
     genMin: 2, genMax: 10, openGen: null, showStock: false,
     pens: 3, rate: 20, tab: "routine", onboarded: false,
     born: { dragodinde: {}, muldo: {}, volkorne: {} }, stock: { dragodinde: {}, muldo: {}, volkorne: {} },
@@ -458,8 +461,9 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       state = { ...state, ...saved, born: { ...state.born, ...saved.born }, stock: { ...state.stock, ...saved.stock }, routine: { ...state.routine, ...saved.routine } };
       // Sauvegardes d'avant la routine : un registre déjà rempli dispense de l'assistant.
       if (saved.onboarded === undefined) state.onboarded = Object.values(state.born).some((b) => Object.keys(b).length);
-      // v2 : le clonage n'est plus compté d'office (il imposait plusieurs tours par génération), il devient un bonus.
-      if (!saved.v || saved.v < 2) { state.clone = false; state.v = 2; }
+      // v3 : le rythme (tours de clonage, taille des sessions) remplace l'ancienne case « clonage ».
+      if (!["calme", "equilibre", "tryhard"].includes(state.pace)) state.pace = "equilibre";
+      state.v = 3;
     }
   } catch (e) { /* stockage indisponible : valeurs par défaut */ }
   const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} };
@@ -490,7 +494,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   function plan(fam, s = state) {
     const mounts = DATA[fam], born = s.born[fam], stock = s.stock[fam];
     const { p } = odds(s);
-    const reuse = s.clone ? 0.5 : 1;
+    const reuse = paceReuse(s);
     const unit = {};
     for (const m of [...mounts].sort((a, b) => a.gen - b.gen)) {
       unit[m.id] = m.gen === 1 ? 1 : Math.min(...m.recipes.map(([a, b]) => (unit[a] + unit[b]) * reuse / p));
@@ -554,17 +558,48 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   }
 
   /* ---------- Ma routine ---------- */
-  // Une génération à la fois, en 5 étapes qui suivent la boucle du jeu. Le libellé de l'étape 5 dépend du clonage.
+  // Rythme choisi par le joueur : nombre de tours de clonage par génération et taille d'une session d'enclos.
+  const PACES = {
+    calme: { label: "Tranquille", tours: 2, pens: () => 1,
+      desc: "Des sessions d'un seul enclos et un seul tour de clonage par génération. Le plus simple à suivre, mais plus de captures." },
+    equilibre: { label: "Équilibré", tours: 3, pens: (n) => Math.ceil(n / 2),
+      desc: "Des sessions sur la moitié de tes enclos et deux tours de clonage par génération." },
+    tryhard: { label: "Tryhard", tours: 8, pens: (n) => n,
+      desc: "Tous tes enclos en même temps, et tu reclones jusqu'au bout : le moins de captures possible, mais plus de tours." },
+  };
+  const paceOf = (s = state) => PACES[s.pace] || PACES.equilibre;
+  // Parents frais par accouplement : chaque tour de clonage rend la moitié des parents du tour précédent.
+  // 2 tours → 2/3, 3 tours → 4/7, à l'infini → 1/2.
+  const paceReuse = (s = state) => 1 / (2 - Math.pow(2, 1 - paceOf(s).tours));
+  const paceButtons = (big) => `<div class="presets ${big ? "lg" : ""}" role="group" aria-label="Rythme de la routine">${Object.entries(PACES).map(([k, x]) =>
+    `<button type="button" data-pace="${k}" aria-pressed="${(state.pace || "equilibre") === k}">${x.label}</button>`).join("")}</div>`;
+  // Répartit les n accouplements d'un croisement sur les tours : le 1er avec des parents frais, chaque suivant avec
+  // les clones du précédent (la moitié), le dernier tour prend le reste.
+  function tourSplit(n, tours) {
+    const out = []; let left = n, prev = 0;
+    for (let t = 1; t <= tours && left > 0; t++) {
+      const k = t === 1 ? Math.min(n, Math.ceil(n * paceReuse() - 1e-9)) : t === tours ? left : Math.min(left, Math.ceil(prev / 2));
+      out.push(k); left -= k; prev = k;
+    }
+    return out;
+  }
+
+  // Une génération se joue en tours de 5 étapes : le 1er tour part de parents frais, les suivants des clones.
   const STEPS = [
     ["parents", "Réunis les parents", "J'ai mes parents"],
     ["enclos", "Rends-les féconds en enclos", "Ils sont féconds"],
     ["accouple", "Accouple-les à l'étable", "Accouplements faits"],
     ["naissances", "Note les naissances", "Naissances notées"],
-    ["clone", "Clone tes stériles (bonus)", "C'est fait"],
+    ["clone", "Clone tes stériles", "Clones faits"],
   ];
-  const stepLabel = (k, label) => (k === "clone" && state.clone ? "Clone les stériles et recommence" : label);
+  function stepLabel(k, label, tr) {
+    if (k === "parents" && tr.t > 1) return "Sors tes clones de l'étable";
+    if (k === "clone") return tr.last ? "Clone tes stériles (bonus)" : "Clone tes stériles pour le tour suivant";
+    return label;
+  }
   let peek = null; // étape ouverte à la main : { gen, key } (key null = tout replier)
   let wizUpTo = 1;
+  const lc = (x) => x.charAt(0).toLowerCase() + x.slice(1);
   const routineOf = (fam) => state.routine[fam] || (state.routine[fam] = { gen: null, done: {} });
   // Bébés à obtenir dans la génération en cours : ceux du plan, plus ceux déjà notés qui en sont sortis (succès validés).
   function birthRows(fam, info, g) {
@@ -581,27 +616,36 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     const g = gens.find((x) => x >= want);
     return g != null ? g : gens[gens.length - 1];
   }
-  // Ce que demande une génération du plan : croisements arrondis, parents par monture, nouveaux succès.
+  // Ce que demande une génération du plan : croisements arrondis, découpés en tours, et nouveaux succès.
   function phaseInfo(fam, pl, g) {
     const rows = Object.entries(pl.result).map(([id, r]) => ({ m: index[fam][id], r })).filter((x) => x.m.gen === g)
       .sort((a, b) => a.m.name.localeCompare(b.m.name, "fr"));
-    const crosses = [], parents = {};
+    const crosses = [];
     for (const { m, r } of rows) m.recipes.forEach(([a, b], i) => {
       if (r.alloc[i] <= 1e-9) return;
       const n = Math.ceil(r.alloc[i] - 1e-9);
-      crosses.push({ m, a: index[fam][a], b: index[fam][b], n });
-      parents[a] = (parents[a] || 0) + n; parents[b] = (parents[b] || 0) + n;
+      crosses.push({ m, a: index[fam][a], b: index[fam][b], n, tours: tourSplit(n, paceOf().tours) });
     });
     return {
-      rows, crosses, parents, breed: crosses.reduce((s, c) => s + c.n, 0),
-      g, births: rows.reduce((s, x) => s + x.r.births, 0), fresh: rows.filter((x) => !state.born[fam][x.m.id]).map((x) => x.m),
+      rows, crosses, g, breed: crosses.reduce((s, c) => s + c.n, 0), tours: Math.max(1, ...crosses.map((c) => c.tours.length)),
+      births: rows.reduce((s, x) => s + x.r.births, 0), fresh: rows.filter((x) => !state.born[fam][x.m.id]).map((x) => x.m),
     };
+  }
+  // Le tour t d'une génération : ses accouplements et les parents qu'ils consomment, couleur par couleur.
+  function tourInfo(info, t) {
+    const crosses = info.crosses.map((c) => ({ ...c, n: c.tours[t - 1] || 0 })).filter((c) => c.n > 0), parents = {};
+    for (const c of crosses) { parents[c.a.id] = (parents[c.a.id] || 0) + c.n; parents[c.b.id] = (parents[c.b.id] || 0) + c.n; }
+    return { t, last: t >= info.tours, crosses, parents, breed: crosses.reduce((s, c) => s + c.n, 0) };
+  }
+  function sessionCalc(count) {
+    const c = penCalc(count), sp = paceOf().pens(c.pens);
+    return { ...c, sp, sessions: Math.max(1, Math.ceil(count / (10 * sp))) };
   }
 
   function wizardHtml() {
     const levels = [[1, "Juste capturés"], [60, "60"], [100, "100"], [150, "150"], [200, "200 (max)"]];
     return `<div class="card wiz">
-      <div class="view-head"><span class="eyebrow">Bienvenue, éleveur</span><h1>Ta routine d'élevage en 3 questions</h1>
+      <div class="view-head"><span class="eyebrow">Bienvenue, éleveur</span><h1>Ta routine d'élevage en 4 questions</h1>
         <p class="lead">Le site te dira ensuite quoi faire, étape par étape : quoi capturer, quoi mettre en enclos, quoi accoupler, jusqu'aux succès de génération 10.</p></div>
       <div class="q"><b><span class="qn">1</span>Quelle famille veux-tu faire ?</b>
         <div class="presets lg">${Object.entries(FAMILIES).map(([k, f]) => `<button type="button" data-fam="${k}" aria-pressed="${state.family === k}">${f.label}</button>`).join("")}</div></div>
@@ -611,51 +655,56 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       <div class="q"><b><span class="qn">3</span>Quel niveau auront tes parents ?</b>
         <div class="presets lg">${levels.map(([v, l]) => `<button type="button" data-level="${v}" aria-pressed="${state.level === v}">${l}</button>`).join("")}</div>
         <span class="note">Plus ils sont hauts, moins il faut d'accouplements (${fmt1.format(odds().p * 100)} % de réussite avec ce choix). Dans le doute, garde 100.</span></div>
+      <div class="q"><b><span class="qn">4</span>À quel rythme veux-tu jouer ?</b>
+        ${paceButtons(true)}
+        <span class="note">${paceOf().desc} Tu pourras changer en haut de ta routine.</span></div>
       <div class="row"><button type="button" class="btn primary" data-act="wiz-done">Afficher ma routine</button>
         <button type="button" class="btn ghost" data-act="wiz-skip">Je préfère cocher moi-même</button></div>
     </div>`;
   }
 
-  function stepSummary(key, fam, info, pl) {
-    const reuse = state.clone ? 0.5 : 1;
+  function stepSummary(key, fam, info, tr, pl) {
     switch (key) {
       case "parents": {
-        const ids = Object.keys(info.parents), n = ids.reduce((s, id) => s + Math.max(1, Math.ceil(info.parents[id] * reuse - 1e-9)), 0);
-        const wild = ids.filter((id) => index[fam][id].gen === 1).length;
-        return `${n} ${plural(n, "parent")} de départ${wild ? ", à capturer" : ""}`;
+        const ids = Object.keys(tr.parents), n = ids.reduce((s, id) => s + tr.parents[id], 0);
+        if (tr.t > 1) return `${n} ${plural(n, "clone")} à remettre au travail`;
+        return `${n} ${plural(n, "parent")}${ids.some((id) => index[fam][id].gen === 1) ? ", à capturer" : ""}`;
       }
-      case "enclos": { const c = penCalc(info.breed * 2); return `${info.breed * 2} montures · ${c.waves} ${plural(c.waves, "vague")} · tri par sérénité`; }
-      case "accouple": return `≈ ${info.breed} ${plural(info.breed, "accouplement")} à ${fmt1.format(pl.p * 100)} % de réussite`;
+      case "enclos": { const c = sessionCalc(tr.breed * 2); return `${tr.breed * 2} montures · ${c.sessions} ${plural(c.sessions, "session")} de ${c.sp} ${plural(c.sp, "enclos", "enclos")}`; }
+      case "accouple": return `${tr.breed} ${plural(tr.breed, "accouplement")} à ${fmt1.format(pl.p * 100)} % de réussite`;
       case "naissances": {
         const rows = birthRows(fam, info, info.g), got = rows.reduce((x, r) => x + Math.min(r.got, r.target), 0), tot = rows.reduce((x, r) => x + r.target, 0);
-        return `${got} / ${tot} ${plural(tot, "bébé")} ${plural(got, "obtenu")}${info.fresh.length ? ` · ${info.fresh.length} ${plural(info.fresh.length, "nouveau succès", "nouveaux succès")} à valider` : ""}`;
+        return `${got} / ${tot} ${plural(tot, "bébé")} ${plural(tot, "obtenu")}${info.fresh.length ? ` · ${info.fresh.length} ${plural(info.fresh.length, "nouveau succès", "nouveaux succès")} à valider` : ""}`;
       }
-      case "clone": return state.clone ? "Les stériles redeviennent des parents" : "Des parents gratuits pour la suite";
+      case "clone": return tr.last ? "Des parents gratuits pour la suite" : `Ils deviennent les parents du tour ${tr.t + 1}`;
     }
   }
 
-  function stepBody(key, fam, g, info, pl) {
-    const f = FAMILIES[fam], reuse = state.clone ? 0.5 : 1;
+  function stepBody(key, fam, g, info, tr, pl) {
+    const f = FAMILIES[fam];
+    const chip = (x) => `<span class="chip">${swatch(x.m)}${esc(x.m.name)} <span class="num">× ${x.n}</span>${x.st ? ` <span class="small muted">(${x.st} en réserve)</span>` : ""}</span>`;
+    const par = Object.entries(tr.parents).map(([id, n]) => ({ m: index[fam][id], n, st: Number(state.stock[fam][id]) || 0 }))
+      .sort((a, b) => a.m.gen - b.m.gen || a.m.name.localeCompare(b.m.name, "fr"));
     if (key === "parents") {
-      const par = Object.entries(info.parents).map(([id, n]) => ({ m: index[fam][id], n: Math.max(1, Math.ceil(n * reuse - 1e-9)), st: Number(state.stock[fam][id]) || 0 }))
-        .sort((a, b) => a.m.gen - b.m.gen || a.m.name.localeCompare(b.m.name, "fr"));
-      const chip = (x) => `<span class="chip">${swatch(x.m)}${esc(x.m.name)} <span class="num">× ${x.n}</span>${x.st ? ` <span class="small muted">(${x.st} en réserve)</span>` : ""}</span>`;
-      const wild = par.filter((x) => x.m.gen === 1), bred = par.filter((x) => x.m.gen > 1);
       // Exemple concret : une couleur utilisée dans plusieurs croisements, pour que le total ne surprenne pas.
-      const uses = (id) => info.crosses.filter((c) => c.a.id === id || c.b.id === id);
+      const uses = (id) => tr.crosses.filter((c) => c.a.id === id || c.b.id === id);
       const mp = par.find((x) => uses(x.m.id).length > 1);
-      const multi = mp && { m: mp.m, k: uses(mp.m.id).length, list: uses(mp.m.id).map((c) => `${c.n} avec ${esc((c.a.id === mp.m.id ? c.b : c.a).name)}`).join(", ") };
+      const multi = mp && `Par exemple, ${esc(mp.m.name)} sert dans ${uses(mp.m.id).length} croisements : ${uses(mp.m.id).map((c) => `${c.n} avec ${esc((c.a.id === mp.m.id ? c.b : c.a).name)}`).join(", ")}.`;
+      if (tr.t > 1) return `<p>Sors de l'étable les clones faits à la fin du tour ${tr.t - 1}. Il te faut :</p>
+        <div class="chips">${par.map(chip).join("")}</div>
+        <p class="note">Ces nombres couvrent les accouplements de ce tour.${multi ? " " + multi : ""} S'il te manque un clone, un bébé raté de la même couleur peut le remplacer.</p>`;
+      const wild = par.filter((x) => x.m.gen === 1), bred = par.filter((x) => x.m.gen > 1);
       return `${wild.length ? `<div class="sub"><b>À capturer</b><div class="chips">${wild.map(chip).join("")}</div>
           <p class="note">${f.where} Équipe un filet (métier Éleveur) pour obtenir le sort de capture ; les filets multiplicateurs capturent plusieurs montures par combat.</p></div>` : ""}
         ${bred.length ? `<div class="sub"><b>À sortir de ton étable</b><div class="chips">${bred.map(chip).join("")}</div>
           <p class="note">Ce sont les bébés des générations précédentes de ta routine.</p></div>` : ""}
-        ${multi ? `<p class="note">Ces nombres couvrent tous les accouplements de l'étape 3. Par exemple, ${esc(multi.m.name)} sert dans ${multi.k} croisements : ${multi.list}.</p>` : ""}
-        <p>Prends autant de mâles que de femelles : chaque accouplement demande un mâle et une femelle.${state.clone ? " Ces quantités ne couvrent que le départ : le clonage des stériles (étape 5) fournit l'autre moitié des parents." : ""}</p>`;
+        <p class="note">Ces nombres couvrent tous les accouplements du tour 1.${multi ? " " + multi : ""}${info.tours > 1 ? ` Les tours suivants se feront avec les clones de ces parents : rien de plus à capturer.` : ""}</p>
+        <p>Prends autant de mâles que de femelles : chaque accouplement demande un mâle et une femelle.</p>`;
     }
     if (key === "enclos") {
-      const count = info.breed * 2, c = penCalc(count);
-      return `<div class="mini"><span><b class="num">${count}</b> montures à rendre fécondes${state.clone ? ", clones compris" : ""}</span>
-          <span><b class="num">${c.waves}</b> ${plural(c.waves, "vague")} de ${10 * c.pens} places</span><span><b class="num">≈ ${hours(c.waveSec)}</b> d'enclos par monture</span></div>
+      const count = tr.breed * 2, c = sessionCalc(count);
+      return `<div class="mini"><span><b class="num">${count}</b> montures à rendre fécondes</span>
+          <span><b class="num">${c.sessions}</b> ${plural(c.sessions, "session")} de ${c.sp} ${plural(c.sp, "enclos", "enclos")} (${10 * c.sp} places)</span><span><b class="num">≈ ${hours(c.waveSec)}</b> par session</span></div>
         <p>Il faut 20 000 en endurance, maturité et amour, mais chaque jauge ne monte que dans une plage de sérénité. Trie tes montures en groupes, puis remplis un enclos par groupe.</p>
         ${sorterHtml()}
         <p class="note">Après chaque passage en enclos, remets les compteurs à zéro et refais le tri : les montures changent de groupe jusqu'à être toutes « Prêtes ». <a href="#enclos">Régler mes enclos</a></p>`;
@@ -665,14 +714,14 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       if (g >= 8 && pl.p < 0.9) tips.push("Pour les générations 8 à 10, monte d'abord tes parents (jauge d'expérience) : au niveau 200 avec une Optimakina, chaque accouplement réussit.");
       if (g >= 9 && !state.takeza) tips.push("Garde si possible ces accouplements pour le jour de Takeza : +20 % de chances.");
       return `<div class="odds"><span class="big num">${fmt1.format(pl.p * 100)} %</span><span>de chances d'obtenir la nouvelle couleur à chaque accouplement.<br><a href="#conditions">Modifier mes conditions</a></span></div>
-        <div class="cross-list">${info.crosses.map((c) => `<div class="cross"><span class="pair">${swatch(c.a)}${esc(c.a.name)} <span class="x">×</span> ${swatch(c.b)}${esc(c.b.name)}</span>
+        <div class="cross-list">${tr.crosses.map((c) => `<div class="cross"><span class="pair">${swatch(c.a)}${esc(c.a.name)} <span class="x">×</span> ${swatch(c.b)}${esc(c.b.name)}</span>
           <span class="cnt">× ${c.n}</span><span class="note" style="grid-column:1/-1">pour obtenir ${esc(c.m.name)}</span></div>`).join("")}</div>
-        <p class="note">À l'étable, choisis un mâle et une femelle féconds : le bébé naît tout de suite et les deux parents deviennent stériles. Fais-les par vagues, au rythme des enclos.</p>
-        ${tips.map((t) => `<div class="tip"><span class="ic">!</span><p>${t}</p></div>`).join("")}`;
+        <p class="note">À l'étable, choisis un mâle et une femelle féconds : le bébé naît tout de suite et les deux parents deviennent stériles.</p>
+        ${tips.map((x) => `<div class="tip"><span class="ic">!</span><p>${x}</p></div>`).join("")}`;
     }
     if (key === "naissances") {
       const rows = birthRows(fam, info, g);
-      return `<p>À chaque bébé de génération ${g} obtenu, touche <b>+</b>. Le premier de chaque monture valide son succès${g === info.T ? "" : ", les suivants serviront de parents à la génération suivante"}.</p>
+      return `<p>À chaque bébé de génération ${g} obtenu, touche <b>+</b>. Le premier de chaque monture valide son succès${g === info.T ? "" : ", les suivants serviront de parents à la génération suivante"}. Les compteurs couvrent toute la génération, tous tours confondus.</p>
         <div class="cross-list">${rows.map((x) => {
           const born = !!state.born[fam][x.m.id], ok = x.got >= x.target;
           return `<div class="cross"><span class="nm">${swatch(x.m)}${esc(x.m.name)}
@@ -682,36 +731,46 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
               <output class="num" aria-label="${esc(x.m.name)} : ${x.got} obtenus sur ${x.target}">${x.got} / ${x.target}</output>
               <button type="button" data-got="${x.m.id}" data-d="1" aria-label="Ajouter un bébé ${esc(x.m.name)}">+</button></span></span></div>`;
         }).join("")}</div>
-        <p class="note">Les bébés ratés reprennent une couleur de leurs parents : garde-les, ils peuvent remplacer un parent manquant${state.clone ? " ou servir au clonage" : ""}.</p>`;
+        <p class="note">Les bébés ratés reprennent une couleur de leurs parents : garde-les, ils peuvent remplacer un parent ou un clone manquant.</p>`;
     }
-    return state.clone
-      ? `<p>Après chaque vague d'accouplements, tes parents sont stériles. Clone-les deux par deux (même génération et même type) : les deux disparaissent et tu récupères l'une des deux, fertile mais avec les jauges à zéro.</p>
-        <p>Remets les clones en enclos (étape 2) et relance des accouplements (étape 3), jusqu'à atteindre ≈ ${info.breed} ${plural(info.breed, "accouplement")} pour cette génération.</p>
-        <p class="note">La monture récupérée garde son genre, sa généalogie et sa sérénité (pas besoin de refaire le tri des enclos), mais perd sa capacité spéciale.</p>`
-      : `<p>Tes parents sont maintenant stériles. Ne les jette pas : clone-les deux par deux (même génération et même type). Les deux disparaissent et tu récupères l'une des deux, fertile.</p>
-        <p>Ces clones sont des parents gratuits pour la suite. Note-les en réserve dans ton registre : le site les déduira de tes prochaines captures.</p>
-        <div class="row"><button type="button" class="btn sm" data-act="stock-open" data-gen="${Math.min(...info.crosses.map((c) => Math.min(c.a.gen, c.b.gen)))}">Noter mes clones en réserve</button></div>
-        <p class="note">La monture récupérée garde son genre, sa généalogie et sa sérénité, mais ses jauges repartent à zéro et elle perd sa capacité spéciale.</p>`;
+    if (!tr.last) {
+      const next = tourInfo(info, tr.t + 1);
+      const want = Object.entries(next.parents).map(([id, n]) => ({ m: index[fam][id], n })).sort((a, b) => a.m.name.localeCompare(b.m.name, "fr"));
+      return `<p>Tes parents sont maintenant stériles. Clone-les <b>deux par deux, de la même couleur</b> : les deux disparaissent et tu récupères l'une des deux, fertile. Deux Amande stériles donnent une Amande, et ainsi de suite.</p>
+        <div class="sub"><b>Clones à obtenir pour le tour ${tr.t + 1}</b><div class="chips">${want.map(chip).join("")}</div></div>
+        <p class="note">Le clone garde son genre, sa généalogie et sa sérénité, mais ses jauges repartent à zéro et il perd sa capacité spéciale. Veille à garder des mâles et des femelles.</p>`;
+    }
+    return `<p>C'était le dernier tour de cette génération. Tes parents sont stériles : clone-les quand même deux par deux, de la même couleur. Les clones sont des parents gratuits pour plus tard.</p>
+        <p>Note-les en réserve dans ton registre : le site les déduira de tes prochaines captures.</p>
+        <div class="row"><button type="button" class="btn sm" data-act="stock-open" data-gen="${Math.min(...info.crosses.map((c) => Math.min(c.a.gen, c.b.gen)))}">Noter mes clones en réserve</button></div>`;
   }
 
   // Objectif de la routine : la première génération visée qui a encore des montures à faire naître (ou celle choisie
   // dans le parcours). La routine ne planifie que le sous-arbre de cet objectif, pour garder des quantités à taille humaine.
   function routineCtx(fam) {
     const r = routineOf(fam);
-    const open = (x) => x >= state.genMin && x <= state.genMax && bornCount(fam, x) < genList(fam, x).length;
+    const inRange = (x) => x >= state.genMin && x <= state.genMax;
+    const open = (x) => inRange(x) && bornCount(fam, x) < genList(fam, x).length;
     let T = r.pick != null && open(r.pick) ? r.pick : null;
+    // L'objectif en cours reste affiché tant que le joueur ne l'a pas validé, même si tous ses succès sont nés.
+    if (T == null && r.target != null && inRange(r.target) && (open(r.target) || Object.keys(r.auto || {}).length)) T = r.target;
     for (let x = state.genMin; T == null && x <= state.genMax; x++) if (open(x)) T = x;
     if (T == null) return { T: null };
-    if (r.target !== T) { r.target = T; r.gen = null; r.done = {}; r.got = {}; r.auto = {}; save(); }
-    const sp = plan(fam, { ...state, genMin: T, genMax: T });
+    if (r.target !== T) { r.target = T; r.gen = null; r.done = {}; r.tour = {}; r.got = {}; r.auto = {}; save(); }
+    // Plan figé : les succès validés avec les compteurs ne changent pas les quantités en cours de route.
+    const bornThen = { ...state.born[fam] };
+    for (const id of Object.keys(r.auto || {})) delete bornThen[id];
+    const sp = plan(fam, { ...state, genMin: T, genMax: T, born: { ...state.born, [fam]: bornThen } });
     const gens = planGens(fam, sp), g = currentGen(fam, gens);
-    return { T, sp, gens, g, info: { ...phaseInfo(fam, sp, g), T } };
+    const info = { ...phaseInfo(fam, sp, g), T };
+    const t = Math.min(Math.max(1, (r.tour || {})[g] || 1), info.tours);
+    return { T, sp, gens, g, info, tr: tourInfo(info, t) };
   }
 
   function renderRoutine(pl, ctx) {
     const fam = state.family, f = FAMILIES[fam], t = famTotals(fam), el = $("routine");
     if (!state.onboarded) { el.innerHTML = wizardHtml(); return; }
-    const { T, sp, gens, g, info } = ctx;
+    const { T, sp, gens, g, info, tr } = ctx;
     const pct = t.n / t.tot, C = 2 * Math.PI * 52;
     const ring = `<div class="ring ${pct >= 1 ? "full" : ""}" role="img" aria-label="${t.n} montures nées sur ${t.tot}">
         <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="12"></circle>
@@ -723,6 +782,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         return `<button type="button" class="${cls}" data-rgen="${x}" ${off ? "disabled" : ""} ${x === T ? 'aria-current="step"' : ""} aria-label="Génération ${x} : ${n} sur ${tot} nées">
           <span>${full ? "✓" : x}</span><span class="bar"><i style="width:${(n / tot) * 100}%"></i></span></button>`;
       }).join("")}</div></div>`;
+    const pace = `<div class="pace-row"><span class="eyebrow">Ton rythme</span>${paceButtons(false)}<span class="note">${paceOf().desc}</span></div>`;
 
     if (T == null) {
       const all = t.n === t.tot;
@@ -733,12 +793,18 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       return;
     }
 
+    const auto = routineOf(fam).auto || {};
     const goal = genList(fam, T).filter((m) => !state.born[fam][m.id]);
-    const done = routineOf(fam).done[g] || {};
-    const births = birthRows(fam, info, g);
-    const isDone = (k) => !!done[k] || (k === "naissances" && births.length > 0 && births.every((x) => x.got >= x.target));
+    const goalAll = genList(fam, T).filter((m) => !state.born[fam][m.id] || auto[m.id]);
+    const done = routineOf(fam).done[`${g}-${tr.t}`] || {};
+    const births = birthRows(fam, info, g), allBorn = births.length > 0 && births.every((x) => x.got >= x.target);
+    const isDone = (k) => !!done[k];
     const cur = STEPS.findIndex(([k]) => !isDone(k));
-    const open = peek && peek.gen === g ? peek.key : cur >= 0 ? STEPS[cur][0] : null;
+    // Tous les bébés visés sont là : le tour en cours devient le dernier, les tours restants sont inutiles.
+    const trv = allBorn ? { ...tr, last: true } : tr;
+    // Génération finie seulement quand le joueur a validé les 5 étapes du dernier tour.
+    const finished = cur < 0 && trv.last;
+    const open = peek && peek.gen === g ? peek.key : cur >= 0 && !finished ? STEPS[cur][0] : null;
     const gi = gens.indexOf(g), next = gens[gi + 1];
     const names = goal.slice(0, 3).map((m) => esc(m.name)).join(", ") + (goal.length > 3 ? ` et ${goal.length - 3} autre${goal.length > 4 ? "s" : ""}` : "");
 
@@ -746,36 +812,46 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         <b>${i < gi ? "✓ " : ""}Gén. ${x}</b><small>${x === T ? "les succès" : "des parents"}</small></li>`).join("")}</ol>`;
     const head = `<div class="card rt-head"><div class="txt"><span class="eyebrow">Ta routine · ${f.label}</span>
         <h1>Objectif : génération ${T}</h1>
-        <p class="lead">${goal.length} ${plural(goal.length, "monture")} à faire naître pour les succès : ${names}.</p>
+        <p class="lead">${goal.length ? `${goal.length} ${plural(goal.length, "monture")} à faire naître pour les succès : ${names}.` : `Les ${goalAll.length} ${plural(goalAll.length, "succès", "succès")} de cette génération sont validés : termine les étapes, puis passe à l'objectif suivant.`}</p>
         ${gens.length > 1 ? `<p class="note">Pour y arriver, produis d'abord les parents des générations précédentes, dans cet ordre :</p>${path}` : ""}
-      </div>${ring}${road}</div>`;
+      </div>${ring}${pace}${road}</div>`;
 
+    const tours = info.tours > 1 ? `<ol class="path tours" aria-label="Tours de cette génération">${Array.from({ length: info.tours }, (_, i) => {
+        const n = tourInfo(info, i + 1).breed;
+        return `<li class="${i + 1 < tr.t ? "done" : i + 1 === tr.t ? "now" : ""}"><b>${i + 1 < tr.t ? "✓ " : ""}Tour ${i + 1}</b><small>${n} ${plural(n, "accouplement")}${i ? ", avec des clones" : ""}</small></li>`;
+      }).join("")}</ol>` : "";
     const now = `<div class="now-bar"><div><span class="eyebrow">Maintenant</span>
-        <h2>Génération ${g}${g === T ? "" : " · des parents"}</h2></div>
-        <div class="now-right"><span>${cur >= 0 ? `Étape ${cur + 1} sur ${STEPS.length}` : "Étapes faites"}</span>
-        <span class="prog" aria-hidden="true">${STEPS.map(([k], i) => `<i class="${isDone(k) ? "on" : i === cur ? "cur" : ""}"></i>`).join("")}</span></div></div>`;
+        <h2>Génération ${g}${g === T ? "" : " · des parents"}${info.tours > 1 ? ` · tour ${tr.t} sur ${info.tours}` : ""}</h2></div>
+        <div class="now-right"><span>${cur >= 0 && !finished ? `Étape ${cur + 1} sur ${STEPS.length}` : "Étapes faites"}</span>
+        <span class="prog" aria-hidden="true">${STEPS.map(([k], i) => `<i class="${isDone(k) ? "on" : i === cur ? "cur" : ""}"></i>`).join("")}</span></div></div>${tours}`;
 
     const steps = `<ol class="steps">${STEPS.map(([k, label, ok], i) => {
-        const d = isDone(k), isOpen = open === k, cls = d ? "done" : i === cur ? "now" : "";
-        const short = k === "naissances" && births.some((x) => x.got < x.target), okLabel = short ? "Continuer, il en manque encore" : ok;
+        const d = isDone(k), isOpen = open === k, cls = d ? "done" : i === cur && !finished ? "now" : "";
+        const short = k === "naissances" && !allBorn && trv.last;
+        const okLabel = short ? "Continuer, il en manque encore" : k === "naissances" && !allBorn ? "Naissances du tour notées"
+          : k === "clone" && !trv.last ? `Clones faits, au tour ${tr.t + 1}` : ok;
         return `<li class="st ${cls}">
           <button type="button" class="st-h" data-stp="${k}" data-gen="${g}" aria-expanded="${isOpen}">
             <span class="n" aria-hidden="true">${d ? "✓" : i + 1}</span>
-            <span><b>${stepLabel(k, label)}</b><small>${stepSummary(k, fam, info, sp)}</small></span>
+            <span><b>${stepLabel(k, label, trv)}</b><small>${stepSummary(k, fam, info, trv, sp)}</small></span>
             <span class="chev" aria-hidden="true">${isOpen ? "▾" : "▸"}</span></button>
-          ${isOpen ? `<div class="st-b">${stepBody(k, fam, g, info, sp)}
+          ${isOpen ? `<div class="st-b">${stepBody(k, fam, g, info, trv, sp)}${k === "naissances" && allBorn ? `<p class="tip"><span class="ic">✓</span><span>Tu as tous les bébés visés pour cette génération. Corrige les compteurs si besoin, puis valide l'étape.${tr.last ? "" : " Les tours restants ne sont plus nécessaires."}</span></p>` : ""}
             <div class="st-act">${d
-              ? (done[k] ? `<button type="button" class="btn sm ghost" data-act="step-undo" data-key="${k}" data-gen="${g}">Marquer comme à refaire</button>` : "")
-              : `<button type="button" class="btn ${short ? "" : "primary"}" data-act="step-done" data-key="${k}" data-gen="${g}">${okLabel}</button>`}</div></div>` : ""}
+              ? (done[k] ? `<button type="button" class="btn sm ghost" data-act="step-undo" data-key="${k}" data-gen="${g}" data-tour="${tr.t}">Marquer comme à refaire</button>` : "")
+              : `<button type="button" class="btn ${short ? "" : "primary"}" data-act="step-done" data-key="${k}" data-gen="${g}" data-tour="${tr.t}" data-last="${trv.last}">${okLabel}</button>`}</div></div>` : ""}
         </li>`;
       }).join("")}</ol>`;
 
-    let end = `<p class="note">${state.clone ? "Les étapes 2 à 5 se répètent par vagues tant qu'il reste des accouplements." : "Si tes enclos n'ont pas assez de places pour tout le monde, fais les étapes 2 à 4 en plusieurs vagues."} Pour tout le chemin jusqu'à la génération 10 : il te reste ${pl.newOnes} ${plural(pl.newOnes, "naissance")}, soit ≈ ${up(pl.totalBreed)} accouplements. <a href="#plan">Voir le plan complet</a></p>`;
-    if (cur < 0) end = next
-      ? `<div class="empty"><h2>Génération ${g} prête</h2><p>Tu as les parents qu'il faut. Prochaine étape du chemin : la génération ${next}${next === T ? ", celle des succès" : ""}.</p>
+    let end = `<p class="note">Rythme ${paceOf().label.toLowerCase()} : ${info.tours > 1 ? `cette génération se fait en ${info.tours} tours, le premier avec des parents frais, les suivants avec leurs clones` : "cette génération se fait en un seul tour"}. Pour tout le chemin jusqu'à la génération 10 : il te reste ${pl.newOnes} ${plural(pl.newOnes, "naissance")}, soit ≈ ${up(pl.totalBreed)} accouplements. <a href="#plan">Voir le plan complet</a></p>`;
+    if (finished) end = allBorn
+      ? (next
+        ? `<div class="empty"><h2>Génération ${g} prête</h2><p>Tu as tous les bébés qu'il faut. Prochaine étape du chemin : la génération ${next}${next === T ? ", celle des succès" : ""}.</p>
           <button type="button" class="btn primary" data-act="next-gen" data-gen="${next}">Passer à la génération ${next}</button></div>`
-      : `<div class="empty"><h2>Il manque encore ${info.fresh.length} ${plural(info.fresh.length, "monture")}</h2><p>Pas de chance sur ces accouplements. La routine a recalculé ce qu'il faut pour les montures manquantes : réunis de nouveaux parents (bébés ratés, clones ou captures) et refais les étapes.</p>
-          <button type="button" class="btn primary" data-act="new-wave" data-gen="${g}">Relancer une vague</button></div>`;
+        : `<div class="empty"><h2>Objectif atteint : génération ${T}</h2><p>Tous les succès de cette génération sont validés. Bravo, éleveur.</p>
+          <button type="button" class="btn primary" data-act="next-goal">Passer à l'objectif suivant</button></div>`)
+      : `<div class="empty"><h2>Il manque encore des bébés</h2><p>Pas de chance sur ces accouplements. Refais quelques accouplements des mêmes croisements avec tes bébés ratés, tes clones ou de nouvelles captures, puis note les naissances.</p>
+          <div class="row">${next ? `<button type="button" class="btn" data-act="next-gen" data-gen="${next}">Passer quand même à la génération ${next}</button>` : ""}
+          <button type="button" class="btn primary" data-act="new-wave" data-gen="${g}" data-tour="${tr.t}">Refaire un tour</button></div></div>`;
 
     el.innerHTML = head + now + steps + end;
   }
@@ -838,8 +914,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       </div>
       <details class="adv" id="advDetails" ${state.advOpen ? "open" : ""}><summary>Réglages avancés</summary>
         <div class="opts">
-          <label class="opt" for="clone"><input type="checkbox" id="clone" ${state.clone ? "checked" : ""}>
-            <span><b>Compter sur le clonage des stériles</b><small>Deux stériles de même génération donnent une monture fertile. Coché, le site compte deux fois moins de captures, mais chaque génération demande plusieurs tours d'enclos, de clonage et d'accouplements.</small></span></label>
+          <div class="opt" style="cursor:default"><span></span><span><b>Ton rythme</b>${paceButtons(false)}<small>${paceOf().desc}</small></span></div>
           <div class="opt" style="cursor:default"><span></span><span><b>Générations visées</b>
             <span class="row small"><label for="genMin">de</label><select id="genMin">${genOpts(state.genMin)}</select>
             <label for="genMax">à</label><select id="genMax">${genOpts(state.genMax)}</select></span>
@@ -1196,16 +1271,15 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     const gotBtn = e.target.closest("[data-got]");
     if (gotBtn) {
       const fam = state.family, id = gotBtn.dataset.got, d = Number(gotBtn.dataset.d), m = index[fam][id];
-      const r = routineOf(fam), snap = JSON.parse(JSON.stringify(r)), before = r.target;
+      const r = routineOf(fam), snap = JSON.parse(JSON.stringify(r));
       const n = Math.max(0, ((r.got || {})[id] || 0) + d);
       r.got = { ...r.got, [id]: n };
       let validated = false;
       if (d > 0 && !state.born[fam][id]) { state.born[fam][id] = true; r.auto = { ...r.auto, [id]: true }; validated = true; }
       if (d < 0 && n === 0 && r.auto && r.auto[id]) { delete state.born[fam][id]; delete r.auto[id]; }
       update();
-      const after = routineOf(fam).target, bumped = validated && before != null && after !== before;
-      if (bumped) window.scrollTo({ top: 0 });
-      if (validated) toast(bumped ? `Génération ${before} bouclée !${after != null ? ` Nouvel objectif : génération ${after}.` : ""}` : `${m.name} : succès validé !`,
+      const T = routineOf(fam).target, all = validated && genList(fam, T).every((x) => state.born[fam][x.id]);
+      if (validated) toast(all ? `Tous les succès de la génération ${T} sont validés ! Termine les étapes pour passer à la suite.` : `${m.name} : succès validé !`,
         () => { delete state.born[fam][id]; state.routine[fam] = snap; update(); });
       const again = document.querySelector(`#routine [data-got="${id}"][data-d="${d}"]`); if (again) again.focus({ preventScroll: true });
       return;
@@ -1249,6 +1323,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       const again = document.querySelector(`${where} ${sel}`); if (again) again.focus({ preventScroll: true });
       return;
     }
+    const paceBtn = e.target.closest("[data-pace]");
+    if (paceBtn) { state.pace = paceBtn.dataset.pace; peek = null; return update(); }
     const lvl = e.target.closest("[data-level]");
     if (lvl) { state.level = Number(lvl.dataset.level); return update(); }
     const a = e.target.closest("[data-act]");
@@ -1266,13 +1342,19 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         toast("Compteurs remis à zéro.", () => { state.sorted = before; softUpdate(); }); break;
       }
       case "step-done": case "step-undo": {
-        const r = routineOf(fam), g = Number(a.dataset.gen), k = a.dataset.key;
-        r.done[g] = { ...r.done[g] };
-        if (a.dataset.act === "step-done") { r.done[g][k] = true; peek = null; } else { delete r.done[g][k]; peek = { gen: g, key: k }; }
+        const r = routineOf(fam), g = Number(a.dataset.gen), t = Number(a.dataset.tour), k = a.dataset.key, key = `${g}-${t}`;
+        r.done[key] = { ...r.done[key] };
+        if (a.dataset.act === "step-undo") { delete r.done[key][k]; peek = { gen: g, key: k }; }
+        else if (k === "clone" && a.dataset.last !== "true") { r.done[key][k] = true; r.tour = { ...r.tour, [g]: t + 1 }; peek = null; }
+        else { r.done[key][k] = true; peek = null; }
         softUpdate(); focusCurrentStep(); break;
       }
+      case "next-goal": {
+        const r = routineOf(fam); r.pick = null; r.target = null; r.auto = {}; peek = null;
+        update(); window.scrollTo({ top: 0 }); toast(routineOf(fam).target != null ? `Nouvel objectif : génération ${routineOf(fam).target}.` : "Tous les succès visés sont bouclés !"); break;
+      }
       case "next-gen": routineOf(fam).gen = Number(a.dataset.gen); peek = null; update(); window.scrollTo({ top: 0 }); break;
-      case "new-wave": { const r = routineOf(fam); r.done[a.dataset.gen] = {}; peek = null; softUpdate(); focusCurrentStep(); break; }
+      case "new-wave": { const r = routineOf(fam); r.done[`${a.dataset.gen}-${a.dataset.tour}`] = {}; peek = null; softUpdate(); focusCurrentStep(); break; }
       case "stock-open":
         state.showStock = true; state.openGen = Number(a.dataset.gen); update(); setTab("registre");
         toast("Indique tes clones dans « En réserve » sous chaque monture."); break;
@@ -1331,7 +1413,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   });
   document.addEventListener("change", (e) => {
     const t = e.target;
-    if (["opti", "takeza", "clone"].includes(t.id)) { state[t.id] = t.checked; return update(); }
+    if (["opti", "takeza"].includes(t.id)) { state[t.id] = t.checked; return update(); }
     if (t.id === "showStock") { state.showStock = t.checked; if (!t.checked && state.openGen === 1) state.openGen = firstOpenGen(state.family); return update(); }
     if (t.id === "wizUpTo") { wizUpTo = Number(t.value); return; }
     if (t.id === "pens" || t.id === "rate") { state[t.id] = Number(t.value); return softUpdate(); }
