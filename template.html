@@ -306,14 +306,10 @@ details.adv[open] > summary { margin-bottom: var(--s4); }
 .sw.lg { width: 38px; height: 38px; }
 
 /* 4. Enclos */
-.pen-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s3); }
-@media (max-width: 760px) { .pen-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.pen-stats .stat b { font-size: 1.45rem; }
 .scale { display: grid; gap: 6px; }
 .scale .ln { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: var(--s3); align-items: center; font-size: .85rem; font-weight: 700; }
 .scale .tr { position: relative; height: 14px; background: var(--sunken); border-radius: 999px; }
 .scale .tr i { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
-.scale .tr .zone-hl { background: var(--ink); opacity: .1; border-radius: 4px; top: -4px; bottom: -4px; }
 .scale .axis { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: var(--s3); }
 .scale .axis div { position: relative; height: 18px; font-size: .75rem; color: var(--muted); font-family: var(--font-data); }
 .scale .axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
@@ -325,24 +321,25 @@ details.adv[open] > summary { margin-bottom: var(--s4); }
 .g-amo { background: var(--love); }
 .g-ser { background: var(--muted); }
 .g-xp { background: var(--accent); }
-.zones { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
-@media (max-width: 640px) { .zones { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.zones button { border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: var(--s3); cursor: pointer; text-align: left; display: grid; gap: 2px; }
-.zones button b { font-size: .95rem; }
-.zones button span { font-size: .8rem; color: var(--muted); font-family: var(--font-data); }
-.zones button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--surface); }
-.routine { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); counter-reset: ph; }
-.routine li { counter-increment: ph; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: var(--s2) var(--s4); align-items: center; background: var(--bg); border-radius: var(--radius-sm); padding: var(--s4); }
-.routine li::before { content: counter(ph); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); font-weight: 800; font-family: var(--font-display); }
-.routine .what { display: grid; gap: 6px; min-width: 0; }
-.routine .dur { font-family: var(--font-data); text-align: right; white-space: nowrap; }
-.routine .dur small { display: block; color: var(--muted); font-family: var(--font-body); font-size: .75rem; }
-@media (max-width: 560px) { .routine li { grid-template-columns: 36px minmax(0, 1fr); } .routine .dur { grid-column: 2; text-align: left; } }
 .jauges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .jg { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 6px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-weight: 700; font-size: .88rem; }
 .jg i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .pen-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s4); }
 .pen-form .field small { color: var(--muted); font-size: .85rem; }
+.sorter { display: grid; gap: var(--s4); }
+.sort-pick { display: grid; gap: var(--s3); background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--s4); }
+.sort-pick .presets button .num { font-size: .78rem; font-weight: 500; opacity: .75; }
+.sort-res { display: flex; gap: var(--s3); align-items: center; justify-content: space-between; flex-wrap: wrap; padding-top: var(--s3); border-top: 1px dashed var(--line); }
+.sort-res b { color: var(--accent); }
+.grps { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s3); }
+.grp { display: grid; gap: var(--s2); align-content: start; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--s3) var(--s4); background: var(--bg); }
+.grp.hl { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.grp.empty-grp { opacity: .8; }
+.cross .stepper output { min-width: 58px; text-align: center; display: inline-block; }
+.cross .nm { flex-wrap: wrap; }
+.tag.ok { background: var(--good-soft); color: var(--good); }
+.grp .stepper output { min-width: 34px; text-align: center; display: inline-block; }
+.grp .row { flex-wrap: nowrap; }
 .pen-form input[type="number"] { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; width: 120px; }
 
 /* Aide */
@@ -446,10 +443,11 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   const plural = (n, s, p = s + "s") => (n > 1 ? p : s);
 
   const defaults = () => ({
-    family: "dragodinde", level: 100, opti: false, optiVal: 20, takeza: false, clone: true,
+    family: "dragodinde", level: 100, opti: false, optiVal: 20, takeza: false, clone: false, v: 2,
     genMin: 2, genMax: 10, openGen: null, showStock: false,
-    pens: 3, rate: 20, zone: "neg", penCount: null, tab: "routine", onboarded: false,
+    pens: 3, rate: 20, tab: "routine", onboarded: false,
     born: { dragodinde: {}, muldo: {}, volkorne: {} }, stock: { dragodinde: {}, muldo: {}, volkorne: {} },
+    sorted: {}, // montures triées par groupe d'enclos (compteurs du trieur)
     // Curseur de la routine par famille : génération en cours et étapes cochées par génération.
     routine: { dragodinde: { gen: null, done: {} }, muldo: { gen: null, done: {} }, volkorne: { gen: null, done: {} } },
   });
@@ -460,6 +458,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       state = { ...state, ...saved, born: { ...state.born, ...saved.born }, stock: { ...state.stock, ...saved.stock }, routine: { ...state.routine, ...saved.routine } };
       // Sauvegardes d'avant la routine : un registre déjà rempli dispense de l'assistant.
       if (saved.onboarded === undefined) state.onboarded = Object.values(state.born).some((b) => Object.keys(b).length);
+      // v2 : le clonage n'est plus compté d'office (il imposait plusieurs tours par génération), il devient un bonus.
+      if (!saved.v || saved.v < 2) { state.clone = false; state.v = 2; }
     }
   } catch (e) { /* stockage indisponible : valeurs par défaut */ }
   const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} };
@@ -553,17 +553,25 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   }
 
   /* ---------- Ma routine ---------- */
-  // Une génération à la fois, en 5 étapes qui suivent la boucle du jeu. Les étapes 2 à 5 se répètent par vagues.
+  // Une génération à la fois, en 5 étapes qui suivent la boucle du jeu. Le libellé de l'étape 5 dépend du clonage.
   const STEPS = [
     ["parents", "Réunis les parents", "J'ai mes parents"],
     ["enclos", "Rends-les féconds en enclos", "Ils sont féconds"],
     ["accouple", "Accouple-les à l'étable", "Accouplements faits"],
     ["naissances", "Note les naissances", "Naissances notées"],
-    ["clone", "Clone les stériles et recommence", "Génération terminée"],
+    ["clone", "Clone tes stériles (bonus)", "C'est fait"],
   ];
+  const stepLabel = (k, label) => (k === "clone" && state.clone ? "Clone les stériles et recommence" : label);
   let peek = null; // étape ouverte à la main : { gen, key } (key null = tout replier)
   let wizUpTo = 1;
   const routineOf = (fam) => state.routine[fam] || (state.routine[fam] = { gen: null, done: {} });
+  // Bébés à obtenir dans la génération en cours : ceux du plan, plus ceux déjà notés qui en sont sortis (succès validés).
+  function birthRows(fam, info, g) {
+    const got = routineOf(fam).got || {};
+    const rows = info.rows.map((x) => ({ m: x.m, target: Math.max(1, Math.ceil(x.r.births - 1e-9)) }));
+    for (const id of Object.keys(got)) if (got[id] && index[fam][id].gen === g && !rows.some((x) => x.m.id === id)) rows.push({ m: index[fam][id], target: 1 });
+    return rows.map((x) => ({ ...x, got: got[x.m.id] || 0 })).sort((a, b) => a.m.name.localeCompare(b.m.name, "fr"));
+  }
   const planGens = (fam, pl) => [...new Set(Object.keys(pl.result).map((id) => index[fam][id].gen))].sort((a, b) => a - b);
   function currentGen(fam, gens) {
     if (!gens.length) return null;
@@ -585,7 +593,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     });
     return {
       rows, crosses, parents, breed: crosses.reduce((s, c) => s + c.n, 0),
-      births: rows.reduce((s, x) => s + x.r.births, 0), fresh: rows.filter((x) => !state.born[fam][x.m.id]).map((x) => x.m),
+      g, births: rows.reduce((s, x) => s + x.r.births, 0), fresh: rows.filter((x) => !state.born[fam][x.m.id]).map((x) => x.m),
     };
   }
 
@@ -615,10 +623,13 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         const wild = ids.filter((id) => index[fam][id].gen === 1).length;
         return `${n} ${plural(n, "parent")} de départ${wild ? ", à capturer" : ""}`;
       }
-      case "enclos": { const c = penCalc(info.breed * 2); return `${info.breed * 2} montures · ${c.waves} ${plural(c.waves, "vague")} de ≈ ${hours(c.waveSec)}`; }
+      case "enclos": { const c = penCalc(info.breed * 2); return `${info.breed * 2} montures · ${c.waves} ${plural(c.waves, "vague")} · tri par sérénité`; }
       case "accouple": return `≈ ${info.breed} ${plural(info.breed, "accouplement")} à ${fmt1.format(pl.p * 100)} % de réussite`;
-      case "naissances": return info.fresh.length ? `${info.fresh.length} ${plural(info.fresh.length, "nouveau succès", "nouveaux succès")} à valider` : "Pas de nouveau succès : bébés à garder comme parents";
-      case "clone": return state.clone ? "Les stériles redeviennent des parents" : "Recommence avec de nouveaux parents";
+      case "naissances": {
+        const rows = birthRows(fam, info, info.g), got = rows.reduce((x, r) => x + Math.min(r.got, r.target), 0), tot = rows.reduce((x, r) => x + r.target, 0);
+        return `${got} / ${tot} ${plural(tot, "bébé")} ${plural(got, "obtenu")}${info.fresh.length ? ` · ${info.fresh.length} ${plural(info.fresh.length, "nouveau succès", "nouveaux succès")} à valider` : ""}`;
+      }
+      case "clone": return state.clone ? "Les stériles redeviennent des parents" : "Des parents gratuits pour la suite";
     }
   }
 
@@ -629,19 +640,24 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         .sort((a, b) => a.m.gen - b.m.gen || a.m.name.localeCompare(b.m.name, "fr"));
       const chip = (x) => `<span class="chip">${swatch(x.m)}${esc(x.m.name)} <span class="num">× ${x.n}</span>${x.st ? ` <span class="small muted">(${x.st} en réserve)</span>` : ""}</span>`;
       const wild = par.filter((x) => x.m.gen === 1), bred = par.filter((x) => x.m.gen > 1);
+      // Exemple concret : une couleur utilisée dans plusieurs croisements, pour que le total ne surprenne pas.
+      const uses = (id) => info.crosses.filter((c) => c.a.id === id || c.b.id === id);
+      const mp = par.find((x) => uses(x.m.id).length > 1);
+      const multi = mp && { m: mp.m, k: uses(mp.m.id).length, list: uses(mp.m.id).map((c) => `${c.n} avec ${esc((c.a.id === mp.m.id ? c.b : c.a).name)}`).join(", ") };
       return `${wild.length ? `<div class="sub"><b>À capturer</b><div class="chips">${wild.map(chip).join("")}</div>
           <p class="note">${f.where} Équipe un filet (métier Éleveur) pour obtenir le sort de capture ; les filets multiplicateurs capturent plusieurs montures par combat.</p></div>` : ""}
         ${bred.length ? `<div class="sub"><b>À sortir de ton étable</b><div class="chips">${bred.map(chip).join("")}</div>
           <p class="note">Ce sont les bébés des générations précédentes de ta routine.</p></div>` : ""}
+        ${multi ? `<p class="note">Ces nombres couvrent tous les accouplements de l'étape 3. Par exemple, ${esc(multi.m.name)} sert dans ${multi.k} croisements : ${multi.list}.</p>` : ""}
         <p>Prends autant de mâles que de femelles : chaque accouplement demande un mâle et une femelle.${state.clone ? " Ces quantités ne couvrent que le départ : le clonage des stériles (étape 5) fournit l'autre moitié des parents." : ""}</p>`;
     }
     if (key === "enclos") {
       const count = info.breed * 2, c = penCalc(count);
-      return `<div class="mini"><span><b class="num">${count}</b> montures à rendre fécondes, clones compris</span>
-          <span><b class="num">${c.waves}</b> ${plural(c.waves, "vague")} de ${10 * c.pens} places</span><span><b class="num">≈ ${hours(c.waveSec)}</b> par vague</span></div>
-        <p>Il faut 20 000 en endurance, maturité et amour. L'ordre des jauges dépend de la sérénité de tes montures : regarde-la dans l'étable et choisis son groupe.</p>
-        ${zoneButtons()}${zoneSteps(c)}
-        <p class="note">Remplis tes enclos à 10 et ne mélange pas les sérénités. Durées calculées pour ${c.pens} ${plural(c.pens, "enclos", "enclos")} au ${c.tier.toLowerCase()}. <a href="#enclos">Régler mes enclos</a></p>`;
+      return `<div class="mini"><span><b class="num">${count}</b> montures à rendre fécondes${state.clone ? ", clones compris" : ""}</span>
+          <span><b class="num">${c.waves}</b> ${plural(c.waves, "vague")} de ${10 * c.pens} places</span><span><b class="num">≈ ${hours(c.waveSec)}</b> d'enclos par monture</span></div>
+        <p>Il faut 20 000 en endurance, maturité et amour, mais chaque jauge ne monte que dans une plage de sérénité. Trie tes montures en groupes, puis remplis un enclos par groupe.</p>
+        ${sorterHtml()}
+        <p class="note">Après chaque passage en enclos, remets les compteurs à zéro et refais le tri : les montures changent de groupe jusqu'à être toutes « Prêtes ». <a href="#enclos">Régler mes enclos</a></p>`;
     }
     if (key === "accouple") {
       const tips = [];
@@ -654,19 +670,27 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         ${tips.map((t) => `<div class="tip"><span class="ic">!</span><p>${t}</p></div>`).join("")}`;
     }
     if (key === "naissances") {
-      const extra = Math.max(0, Math.ceil(info.births - 1e-9) - info.fresh.length);
-      if (!info.fresh.length) return `<p>Aucun nouveau succès dans cette génération : ses bébés servent de parents pour la suite. Garde-les tous (≈ ${up(info.births)}).</p>`;
-      return `<p>Clique dès qu'une nouvelle monture naît : le succès est validé et la routine se recalcule.</p>
-        <div class="cross-list">${info.fresh.map((m) => `<div class="cross"><span class="nm">${swatch(m)}${esc(m.name)}</span>
-          <button type="button" class="mark" data-born="${m.id}"><span class="cb" aria-hidden="true"></span>Marquer comme née</button></div>`).join("")}</div>
-        <p class="note">${extra ? `Garde aussi ≈ ${extra} ${plural(extra, "bébé")} de plus : ${plural(extra, "il servira", "ils serviront")} de parents à la génération suivante. ` : ""}Les bébés ratés reprennent une couleur de leurs parents : garde-les comme parents de rechange ou pour le clonage.</p>`;
+      const rows = birthRows(fam, info, g);
+      return `<p>À chaque bébé de génération ${g} obtenu, touche <b>+</b>. Le premier de chaque monture valide son succès${g === info.T ? "" : ", les suivants serviront de parents à la génération suivante"}.</p>
+        <div class="cross-list">${rows.map((x) => {
+          const born = !!state.born[fam][x.m.id], ok = x.got >= x.target;
+          return `<div class="cross"><span class="nm">${swatch(x.m)}${esc(x.m.name)}
+              ${!born ? '<span class="tag new">nouveau succès</span>' : ok ? '<span class="tag ok">✓ fait</span>' : ""}</span>
+            <span class="stepper"><span class="ctl">
+              <button type="button" data-got="${x.m.id}" data-d="-1" aria-label="Retirer un bébé ${esc(x.m.name)}">−</button>
+              <output class="num" aria-label="${esc(x.m.name)} : ${x.got} obtenus sur ${x.target}">${x.got} / ${x.target}</output>
+              <button type="button" data-got="${x.m.id}" data-d="1" aria-label="Ajouter un bébé ${esc(x.m.name)}">+</button></span></span></div>`;
+        }).join("")}</div>
+        <p class="note">Les bébés ratés reprennent une couleur de leurs parents : garde-les, ils peuvent remplacer un parent manquant${state.clone ? " ou servir au clonage" : ""}.</p>`;
     }
     return state.clone
       ? `<p>Après chaque vague d'accouplements, tes parents sont stériles. Clone-les deux par deux (même génération et même type) : les deux disparaissent et tu récupères l'une des deux, fertile mais avec les jauges à zéro.</p>
         <p>Remets les clones en enclos (étape 2) et relance des accouplements (étape 3), jusqu'à atteindre ≈ ${info.breed} ${plural(info.breed, "accouplement")} pour cette génération.</p>
         <p class="note">La monture récupérée garde son genre, sa généalogie et sa sérénité (pas besoin de refaire le tri des enclos), mais perd sa capacité spéciale.</p>`
-      : `<p>Relance des vagues d'enclos et d'accouplements avec de nouveaux parents, jusqu'à atteindre ≈ ${info.breed} ${plural(info.breed, "accouplement")} pour cette génération.</p>
-        <p class="note">Tu as désactivé le recyclage par clonage. Deux stériles de même génération donnent une monture fertile : environ deux fois moins de parents à produire. <a href="#conditions">Le réactiver</a></p>`;
+      : `<p>Tes parents sont maintenant stériles. Ne les jette pas : clone-les deux par deux (même génération et même type). Les deux disparaissent et tu récupères l'une des deux, fertile.</p>
+        <p>Ces clones sont des parents gratuits pour la suite. Note-les en réserve dans ton registre : le site les déduira de tes prochaines captures.</p>
+        <div class="row"><button type="button" class="btn sm" data-act="stock-open" data-gen="${Math.min(...info.crosses.map((c) => Math.min(c.a.gen, c.b.gen)))}">Noter mes clones en réserve</button></div>
+        <p class="note">La monture récupérée garde son genre, sa généalogie et sa sérénité, mais ses jauges repartent à zéro et elle perd sa capacité spéciale.</p>`;
   }
 
   // Objectif de la routine : la première génération visée qui a encore des montures à faire naître (ou celle choisie
@@ -677,10 +701,10 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     let T = r.pick != null && open(r.pick) ? r.pick : null;
     for (let x = state.genMin; T == null && x <= state.genMax; x++) if (open(x)) T = x;
     if (T == null) return { T: null };
-    if (r.target !== T) { r.target = T; r.gen = null; r.done = {}; save(); }
+    if (r.target !== T) { r.target = T; r.gen = null; r.done = {}; r.got = {}; r.auto = {}; save(); }
     const sp = plan(fam, { ...state, genMin: T, genMax: T });
     const gens = planGens(fam, sp), g = currentGen(fam, gens);
-    return { T, sp, gens, g, info: phaseInfo(fam, sp, g) };
+    return { T, sp, gens, g, info: { ...phaseInfo(fam, sp, g), T } };
   }
 
   function renderRoutine(pl, ctx) {
@@ -710,7 +734,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
 
     const goal = genList(fam, T).filter((m) => !state.born[fam][m.id]);
     const done = routineOf(fam).done[g] || {};
-    const isDone = (k) => !!done[k] || (k === "naissances" && !info.fresh.length && !!done.accouple);
+    const births = birthRows(fam, info, g);
+    const isDone = (k) => !!done[k] || (k === "naissances" && births.length > 0 && births.every((x) => x.got >= x.target));
     const cur = STEPS.findIndex(([k]) => !isDone(k));
     const open = peek && peek.gen === g ? peek.key : cur >= 0 ? STEPS[cur][0] : null;
     const gi = gens.indexOf(g), next = gens[gi + 1];
@@ -731,24 +756,24 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
 
     const steps = `<ol class="steps">${STEPS.map(([k, label, ok], i) => {
         const d = isDone(k), isOpen = open === k, cls = d ? "done" : i === cur ? "now" : "";
-        const okLabel = k === "naissances" && info.fresh.length ? "Continuer, il en manque encore" : ok;
+        const short = k === "naissances" && births.some((x) => x.got < x.target), okLabel = short ? "Continuer, il en manque encore" : ok;
         return `<li class="st ${cls}">
           <button type="button" class="st-h" data-stp="${k}" data-gen="${g}" aria-expanded="${isOpen}">
             <span class="n" aria-hidden="true">${d ? "✓" : i + 1}</span>
-            <span><b>${label}</b><small>${stepSummary(k, fam, info, sp)}</small></span>
+            <span><b>${stepLabel(k, label)}</b><small>${stepSummary(k, fam, info, sp)}</small></span>
             <span class="chev" aria-hidden="true">${isOpen ? "▾" : "▸"}</span></button>
           ${isOpen ? `<div class="st-b">${stepBody(k, fam, g, info, sp)}
             <div class="st-act">${d
               ? (done[k] ? `<button type="button" class="btn sm ghost" data-act="step-undo" data-key="${k}" data-gen="${g}">Marquer comme à refaire</button>` : "")
-              : `<button type="button" class="btn ${k === "naissances" && info.fresh.length ? "" : "primary"}" data-act="step-done" data-key="${k}" data-gen="${g}">${okLabel}</button>`}</div></div>` : ""}
+              : `<button type="button" class="btn ${short ? "" : "primary"}" data-act="step-done" data-key="${k}" data-gen="${g}">${okLabel}</button>`}</div></div>` : ""}
         </li>`;
       }).join("")}</ol>`;
 
-    let end = `<p class="note">Les étapes 2 à 5 se répètent par vagues tant qu'il reste des accouplements. Pour tout le chemin jusqu'à la génération 10 : il te reste ${pl.newOnes} ${plural(pl.newOnes, "naissance")}, soit ≈ ${up(pl.totalBreed)} accouplements. <a href="#plan">Voir le plan complet</a></p>`;
+    let end = `<p class="note">${state.clone ? "Les étapes 2 à 5 se répètent par vagues tant qu'il reste des accouplements." : "Si tes enclos n'ont pas assez de places pour tout le monde, fais les étapes 2 à 4 en plusieurs vagues."} Pour tout le chemin jusqu'à la génération 10 : il te reste ${pl.newOnes} ${plural(pl.newOnes, "naissance")}, soit ≈ ${up(pl.totalBreed)} accouplements. <a href="#plan">Voir le plan complet</a></p>`;
     if (cur < 0) end = next
       ? `<div class="empty"><h2>Génération ${g} prête</h2><p>Tu as les parents qu'il faut. Prochaine étape du chemin : la génération ${next}${next === T ? ", celle des succès" : ""}.</p>
           <button type="button" class="btn primary" data-act="next-gen" data-gen="${next}">Passer à la génération ${next}</button></div>`
-      : `<div class="empty"><h2>Il manque encore ${info.fresh.length} ${plural(info.fresh.length, "monture")}</h2><p>Pas de chance sur cette vague. Relance des accouplements avec tes clones et tes bébés ratés, puis note les naissances.</p>
+      : `<div class="empty"><h2>Il manque encore ${info.fresh.length} ${plural(info.fresh.length, "monture")}</h2><p>Pas de chance sur ces accouplements. La routine a recalculé ce qu'il faut pour les montures manquantes : réunis de nouveaux parents (bébés ratés, clones ou captures) et refais les étapes.</p>
           <button type="button" class="btn primary" data-act="new-wave" data-gen="${g}">Relancer une vague</button></div>`;
 
     el.innerHTML = head + now + steps + end;
@@ -813,7 +838,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       <details class="adv" id="advDetails" ${state.advOpen ? "open" : ""}><summary>Réglages avancés</summary>
         <div class="opts">
           <label class="opt" for="clone"><input type="checkbox" id="clone" ${state.clone ? "checked" : ""}>
-            <span><b>Je recycle les stériles par clonage</b><small>Deux stériles de même génération donnent une monture fertile : environ deux fois moins de parents à produire.</small></span></label>
+            <span><b>Compter sur le clonage des stériles</b><small>Deux stériles de même génération donnent une monture fertile. Coché, le site compte deux fois moins de captures, mais chaque génération demande plusieurs tours d'enclos, de clonage et d'accouplements.</small></span></label>
           <div class="opt" style="cursor:default"><span></span><span><b>Générations visées</b>
             <span class="row small"><label for="genMin">de</label><select id="genMin">${genOpts(state.genMin)}</select>
             <label for="genMax">à</label><select id="genMax">${genOpts(state.genMax)}</select></span>
@@ -940,28 +965,66 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   const jg = (k) => `<span class="jg"><i class="${JAUGES[k][1]}"></i>${JAUGES[k][0]}</span>`;
   const pct = (v) => ((v + 5000) / 100);
   function penCalc(count) {
-    const rate = Number(state.rate), pens = Number(state.pens), zone = ZONES[state.zone] || ZONES.neg;
+    const rate = Number(state.rate), pens = Number(state.pens), zone = ZONES.neg; // durée de référence : un cycle complet depuis une sérénité négative
     const phaseSec = zone.phases.map((ph) => (ph.pts / rate) * 10);
     return {
       rate, pens, zone, phaseSec, tier: RATES.find((r) => r[0] === rate)[2],
       waveSec: phaseSec.reduce((a, b) => a + b, 0), waves: Math.max(1, Math.ceil(count / (10 * pens))),
     };
   }
-  const zoneButtons = () => `<div class="zones" role="group" aria-label="Sérénité de départ">${Object.entries(ZONES).map(([k, z]) =>
-    `<button type="button" data-zone="${k}" aria-pressed="${state.zone === k}"><b>${z.label}</b><span>${z.range}</span></button>`).join("")}</div>`;
-  const zoneSteps = (c) => `<ol class="routine">${c.zone.phases.map((ph, i) => `<li>
-    <div class="what"><span class="jauges"><span class="small muted">Active</span>${ph.j.map(jg).join('<span class="muted">+</span>')}</span><span>${ph.goal}</span></div>
-    <span class="dur">≈ ${hours(c.phaseSec[i])}<small>${fmt0.format(ph.pts)} pts</small></span></li>`).join("")}</ol>`;
+  // Trieur : la sérénité et les jauges déjà pleines désignent l'enclos où mettre une monture.
+  const GROUPS = {
+    endmat: { label: "Endurance + Maturité", j: ["end", "mat"], pts: 20000,
+      rule: "Sérénité de -2 000 à -1, il lui manque l'endurance ou la maturité.", next: "« Monter la sérénité », ou « Prête » si l'amour est plein." },
+    matamo: { label: "Maturité + Amour", j: ["mat", "amo"], pts: 20000,
+      rule: "Sérénité de 0 à 2 000, il lui manque la maturité ou l'amour.", next: "« Baisser la sérénité », ou « Prête » si l'endurance est pleine." },
+    up: { label: "Monter la sérénité", j: ["serUp", "end"], pts: 2000,
+      rule: "Sérénité sous -2 000, ou négative alors qu'il ne lui manque que l'amour.", next: "refais-la trier dès qu'elle a changé de plage." },
+    down: { label: "Baisser la sérénité", j: ["serDown", "amo"], pts: 2000,
+      rule: "Sérénité au-dessus de 2 000, ou positive alors qu'il ne lui manque que l'endurance.", next: "refais-la trier dès qu'elle a changé de plage." },
+    ready: { label: "Prête", j: [], pts: 0, rule: "Endurance, maturité et amour à 20 000 : elle est féconde.", next: "à l'étable, pour l'accouplement." },
+  };
+  let sortSer = "neg", sortFull = { end: false, mat: false, amo: false };
+  function classify(ser, f) {
+    if (f.end && f.mat && f.amo) return "ready";
+    if (ser === "tresNeg") return "up";
+    if (ser === "neg") return !f.end || !f.mat ? "endmat" : "up";
+    if (ser === "pos") return !f.mat || !f.amo ? "matamo" : "down";
+    return "down";
+  }
+  function sorterHtml() {
+    const cls = classify(sortSer, sortFull), rate = Number(state.rate), pens = Number(state.pens);
+    const counts = state.sorted || {}, total = Object.values(counts).reduce((x, y) => x + y, 0);
+    const need = Object.entries(GROUPS).reduce((x, [k, gr]) => x + (gr.j.length ? Math.ceil((counts[k] || 0) / 10) : 0), 0);
+    return `<div class="sorter">
+      <div class="sort-pick">
+        <span class="eyebrow">Trie une monture de ton étable</span>
+        <div class="sub"><b>Sa sérénité</b><div class="presets">${Object.entries(ZONES).map(([k, z]) =>
+          `<button type="button" data-sser="${k}" aria-pressed="${sortSer === k}">${z.label} <span class="num">${z.range}</span></button>`).join("")}</div></div>
+        <div class="sub"><b>Ses jauges déjà à 20 000</b><div class="presets">${["end", "mat", "amo"].map((k) =>
+          `<button type="button" data-sfull="${k}" aria-pressed="${sortFull[k]}">${JAUGES[k][0]}</button>`).join("")}</div></div>
+        <div class="sort-res"><span>Elle va dans <b>${GROUPS[cls].label}</b></span>
+          <button type="button" class="btn sm primary" data-act="sort-add">+1 dans ce groupe</button></div>
+      </div>
+      <div class="grps">${Object.entries(GROUPS).map(([k, gr]) => {
+        const n = counts[k] || 0, pensN = Math.ceil(n / 10);
+        return `<div class="grp ${k === cls ? "hl" : ""} ${n ? "" : "empty-grp"}">
+          <div class="row between"><b>${gr.label}</b><span class="stepper"><span class="ctl">
+            <button type="button" data-gstep="${k}" data-d="-1" aria-label="Retirer une monture de « ${gr.label} »">−</button>
+            <output class="num" aria-label="Montures dans « ${gr.label} »">${n}</output>
+            <button type="button" data-gstep="${k}" data-d="1" aria-label="Ajouter une monture à « ${gr.label} »">+</button></span></span></div>
+          ${gr.j.length ? `<span class="jauges"><span class="small muted">Active</span>${gr.j.map(jg).join('<span class="muted">+</span>')}</span>` : ""}
+          <p class="note">${gr.rule}</p>
+          ${n ? `<p class="small">${gr.j.length ? `<b>${pensN} ${plural(pensN, "enclos", "enclos")}</b> · jusqu'à ≈ ${hours((gr.pts / rate) * 10)}` : `<b>${n} ${plural(n, "monture")}</b> à accoupler`}</p>` : ""}
+          <p class="note">Ensuite : ${gr.next}</p></div>`;
+      }).join("")}</div>
+      ${total ? `<div class="row between small"><span>${total} ${plural(total, "monture triée", "montures triées")} · ${need} ${plural(need, "enclos", "enclos")} ${plural(need, "nécessaire")} sur tes ${pens}${need > pens ? ". Remplis d'abord les groupes les plus nombreux : les autres attendront le tour suivant." : "."}</span>
+        <button type="button" class="btn sm ghost" data-act="sort-reset">Remettre à zéro</button></div>` : ""}
+    </div>`;
+  }
 
-  function renderPens(ctx) {
-    const firstGen = ctx.T != null ? ctx.g : null;
-    const autoCount = firstGen ? ctx.info.breed * 2 : 20;
-    const count = state.penCount != null ? state.penCount : autoCount;
-    const c = penCalc(count), { rate, pens, zone, phaseSec, waveSec, waves } = c;
-    const fuel = zone.phases.reduce((s, ph) => s + ph.pts * ph.j.filter((k) => k !== "xp").length, 0);
-    const xpFuel = zone.phases.reduce((s, ph) => s + (ph.j.includes("xp") ? ph.pts : 0), 0);
-    const axis = [-5000, -2000, 0, 2000, 5000];
-    const hl = `<i class="zone-hl" style="left:${pct(zone.from)}%;width:${pct(zone.to) - pct(zone.from)}%"></i>`;
+  function renderPens() {
+    const rate = Number(state.rate), pens = Number(state.pens), axis = [-5000, -2000, 0, 2000, 5000];
     $("pens").innerHTML = `
       <div class="card">
         <div class="pen-form">
@@ -971,28 +1034,21 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
           <div class="field"><label for="rate">Remplissage de tes jauges d'enclos</label>
             <select id="rate">${RATES.map(([r, range, t]) => `<option value="${r}" ${r === rate ? "selected" : ""}>${t} : ${range} (${r} pts / 10 s)</option>`).join("")}</select>
             <small>Plus la jauge est pleine, plus elle débite vite. Garde-la au-dessus de 180 000 pour aller 4 fois plus vite qu'en tier 1.</small></div>
-          <div class="field"><label for="penCount">Montures à rendre fécondes</label>
-            <span class="row"><input type="number" id="penCount" min="1" step="1" value="${count}">
-            ${state.penCount != null ? `<button type="button" class="btn sm ghost" data-act="pen-auto">Revenir au calcul auto</button>` : ""}</span>
-            <small>${firstGen ? `Calculé pour la génération en cours de ta routine (génération ${firstGen}) : 2 parents par accouplement, clones compris.` : "Aucune étape restante dans le plan : saisis un nombre."}</small></div>
         </div>
-      </div>
-      <div class="pen-stats">
-        <div class="stat"><b>${hours(waveSec)}</b><span>par vague, enclos en parallèle</span></div>
-        <div class="stat"><b>${fmt0.format(waves)}</b><span>${plural(waves, "vague")} de ${10 * pens} montures</span></div>
-        <div class="stat"><b>${hours(waveSec * waves)}</b><span>de jauges au total</span></div>
-        <div class="stat"><b>${fmt0.format(Math.round(fuel / 10))}</b><span>points de carburant par monture (enclos plein)</span></div>
       </div>
       <div class="card">
-        <div class="row between"><h3>Quelle est la sérénité de tes montures ?</h3><span class="small muted">Regarde-la dans l'étable, puis choisis le groupe</span></div>
+        <div class="row between"><h3>Trie tes montures</h3><span class="small muted">Une monture à la fois, ou directement avec les compteurs</span></div>
+        ${sorterHtml()}
+      </div>
+      <div class="card">
+        <h3>Pourquoi ces groupes ?</h3>
         <div class="scale" aria-label="Jauges qui progressent selon la sérénité">
-          <div class="ln"><span>Endurance</span><span class="tr">${hl}<i class="g-end" style="left:0;width:${pct(-1)}%"></i></span></div>
-          <div class="ln"><span>Maturité</span><span class="tr">${hl}<i class="g-mat" style="left:${pct(-2000)}%;width:${pct(2000) - pct(-2000)}%"></i></span></div>
-          <div class="ln"><span>Amour</span><span class="tr">${hl}<i class="g-amo" style="left:${pct(0)}%;width:${100 - pct(0)}%"></i></span></div>
+          <div class="ln"><span>Endurance</span><span class="tr"><i class="g-end" style="left:0;width:${pct(-1)}%"></i></span></div>
+          <div class="ln"><span>Maturité</span><span class="tr"><i class="g-mat" style="left:${pct(-2000)}%;width:${pct(2000) - pct(-2000)}%"></i></span></div>
+          <div class="ln"><span>Amour</span><span class="tr"><i class="g-amo" style="left:${pct(0)}%;width:${100 - pct(0)}%"></i></span></div>
           <div class="axis"><span></span><div>${axis.map((v) => `<span style="left:${pct(v)}%">${v > 0 ? "+" : ""}${fmt0.format(v)}</span>`).join("")}</div></div>
         </div>
-        ${zoneButtons()}${zoneSteps(c)}
-        <p class="small muted">Durées pour une jauge d'enclos au ${c.tier.toLowerCase()} (${rate} points toutes les 10 secondes). Carburant d'une vague par enclos : ≈ ${fmt0.format(fuel)} points de jauges utiles, plus ${fmt0.format(xpFuel)} d'expérience si tu actives la jauge d'XP (facultative, mais elle monte le niveau donc les chances de réussite).</p>
+        <p class="small muted">Chaque jauge ne monte que dans sa plage de sérénité. Une monture négative fait donc d'abord endurance et maturité, puis remonte sa sérénité pour l'amour ; une positive fait l'inverse. La jauge d'expérience est facultative, mais elle monte le niveau, donc tes chances de réussite.</p>
       </div>
       <div class="tip"><span class="ic">!</span><div style="display:grid;gap:8px">
         <p><b>Remplis toujours tes enclos à 10.</b> Une jauge d'enclos se vide à la même vitesse avec 1 ou 10 montures : un enclos plein coûte 10 fois moins de carburant par monture.</p>
@@ -1081,13 +1137,13 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   function render() {
     const pl = plan(state.family);
     const ctx = routineCtx(state.family);
-    renderFamilies(); renderTabs(); renderRoutine(pl, ctx); renderProgress(); renderConditions(); renderPlan(pl, ctx); renderPens(ctx); refreshSaveCode();
+    renderFamilies(); renderTabs(); renderRoutine(pl, ctx); renderProgress(); renderConditions(); renderPlan(pl, ctx); renderPens(); refreshSaveCode();
   }
   const update = () => { save(); render(); };
   // Ne redessine pas le registre ni les conditions : garde le focus sur le curseur de niveau et les champs de réserve.
   const softUpdate = () => {
     save(); const pl = plan(state.family), ctx = routineCtx(state.family);
-    renderFamilies(); renderTabs(); renderRoutine(pl, ctx); renderPlan(pl, ctx); renderPens(ctx); refreshSaveCode();
+    renderFamilies(); renderTabs(); renderRoutine(pl, ctx); renderPlan(pl, ctx); renderPens(); refreshSaveCode();
   };
   const focusCurrentStep = () => requestAnimationFrame(() => {
     const st = document.querySelector(".st.now") || document.querySelector("#routine .empty");
@@ -1135,6 +1191,24 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       const again = document.querySelector(`[data-stp="${k}"]`); if (again) again.focus({ preventScroll: true });
       return;
     }
+    // Compteur de naissances : le premier bébé d'une monture valide son succès.
+    const gotBtn = e.target.closest("[data-got]");
+    if (gotBtn) {
+      const fam = state.family, id = gotBtn.dataset.got, d = Number(gotBtn.dataset.d), m = index[fam][id];
+      const r = routineOf(fam), snap = JSON.parse(JSON.stringify(r)), before = r.target;
+      const n = Math.max(0, ((r.got || {})[id] || 0) + d);
+      r.got = { ...r.got, [id]: n };
+      let validated = false;
+      if (d > 0 && !state.born[fam][id]) { state.born[fam][id] = true; r.auto = { ...r.auto, [id]: true }; validated = true; }
+      if (d < 0 && n === 0 && r.auto && r.auto[id]) { delete state.born[fam][id]; delete r.auto[id]; }
+      update();
+      const after = routineOf(fam).target, bumped = validated && before != null && after !== before;
+      if (bumped) window.scrollTo({ top: 0 });
+      if (validated) toast(bumped ? `Génération ${before} bouclée !${after != null ? ` Nouvel objectif : génération ${after}.` : ""}` : `${m.name} : succès validé !`,
+        () => { delete state.born[fam][id]; state.routine[fam] = snap; update(); });
+      const again = document.querySelector(`#routine [data-got="${id}"][data-d="${d}"]`); if (again) again.focus({ preventScroll: true });
+      return;
+    }
     const rgen = e.target.closest("[data-rgen]");
     if (rgen) { routineOf(state.family).pick = Number(rgen.dataset.rgen); peek = null; return update(); }
     const famBtn = e.target.closest("[data-fam]");
@@ -1162,15 +1236,34 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     }
     const gen = e.target.closest(".gen[data-gen]");
     if (gen) { state.openGen = Number(gen.dataset.gen); return update(); }
-    const zoneBtn = e.target.closest("[data-zone]");
-    if (zoneBtn) { state.zone = zoneBtn.dataset.zone; return softUpdate(); }
+    // Trieur : garde le focus sur le bouton cliqué, qui est redessiné.
+    const sortBtn = e.target.closest("[data-sser], [data-sfull], [data-gstep]");
+    if (sortBtn) {
+      const d = sortBtn.dataset, where = sortBtn.closest("#routine") ? "#routine" : "#pens";
+      const sel = d.sser ? `[data-sser="${d.sser}"]` : d.sfull ? `[data-sfull="${d.sfull}"]` : `[data-gstep="${d.gstep}"][data-d="${d.d}"]`;
+      if (d.sser) sortSer = d.sser;
+      else if (d.sfull) sortFull = { ...sortFull, [d.sfull]: !sortFull[d.sfull] };
+      else state.sorted = { ...state.sorted, [d.gstep]: Math.max(0, (state.sorted[d.gstep] || 0) + Number(d.d)) };
+      softUpdate();
+      const again = document.querySelector(`${where} ${sel}`); if (again) again.focus({ preventScroll: true });
+      return;
+    }
     const lvl = e.target.closest("[data-level]");
     if (lvl) { state.level = Number(lvl.dataset.level); return update(); }
     const a = e.target.closest("[data-act]");
     if (!a) return;
     const fam = state.family;
     switch (a.dataset.act) {
-      case "pen-auto": state.penCount = null; save(); renderPens(routineCtx(fam)); break;
+      case "sort-add": {
+        const k = classify(sortSer, sortFull);
+        state.sorted = { ...state.sorted, [k]: (state.sorted[k] || 0) + 1 };
+        softUpdate(); toast(`+1 dans « ${GROUPS[k].label} »`); break;
+      }
+      case "sort-reset": {
+        const before = { ...state.sorted };
+        state.sorted = {}; softUpdate();
+        toast("Compteurs remis à zéro.", () => { state.sorted = before; softUpdate(); }); break;
+      }
       case "step-done": case "step-undo": {
         const r = routineOf(fam), g = Number(a.dataset.gen), k = a.dataset.key;
         r.done[g] = { ...r.done[g] };
@@ -1178,7 +1271,10 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         softUpdate(); focusCurrentStep(); break;
       }
       case "next-gen": routineOf(fam).gen = Number(a.dataset.gen); peek = null; update(); window.scrollTo({ top: 0 }); break;
-      case "new-wave": { const r = routineOf(fam); r.done[a.dataset.gen] = { parents: true }; peek = null; softUpdate(); focusCurrentStep(); break; }
+      case "new-wave": { const r = routineOf(fam); r.done[a.dataset.gen] = {}; peek = null; softUpdate(); focusCurrentStep(); break; }
+      case "stock-open":
+        state.showStock = true; state.openGen = Number(a.dataset.gen); update(); setTab("registre");
+        toast("Indique tes clones dans « En réserve » sous chaque monture."); break;
       case "wiz-done": {
         if (wizUpTo > 1) DATA[fam].forEach((m) => { if (m.gen >= 2 && m.gen <= wizUpTo) state.born[fam][m.id] = true; });
         state.onboarded = true; routineOf(fam).pick = null; state.openGen = firstOpenGen(fam); peek = null;
@@ -1238,7 +1334,6 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     if (t.id === "showStock") { state.showStock = t.checked; if (!t.checked && state.openGen === 1) state.openGen = firstOpenGen(state.family); return update(); }
     if (t.id === "wizUpTo") { wizUpTo = Number(t.value); return; }
     if (t.id === "pens" || t.id === "rate") { state[t.id] = Number(t.value); return softUpdate(); }
-    if (t.id === "penCount") { const v = Math.max(1, Math.floor(Number(t.value) || 1)); state.penCount = v; save(); return renderPens(routineCtx(state.family)); }
     if (t.id === "optiVal") { state.optiVal = Number(t.value); return update(); }
     if (t.id === "genMin") { state.genMin = Number(t.value); if (state.genMax < state.genMin) state.genMax = state.genMin; return update(); }
     if (t.id === "genMax") { state.genMax = Number(t.value); if (state.genMin > state.genMax) state.genMin = state.genMax; return update(); }
