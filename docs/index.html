@@ -156,6 +156,9 @@ main .wrap { padding-block: var(--s6) var(--s8); }
 .pace-row { grid-column: 1 / -1; display: grid; gap: var(--s2); padding-top: var(--s4); border-top: 1px solid var(--line); }
 .path.tours { margin-top: calc(var(--s2) * -1); }
 
+.lvtab { display: grid; grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: var(--s2); margin: var(--s2) 0; }
+.lvtab span { display: grid; justify-items: center; padding: var(--s2); border: 1px solid var(--line); border-radius: 10px; }
+
 /* Routine : étapes */
 .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
 .st { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -455,7 +458,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   const plural = (n, s, p = s + "s") => (n > 1 ? p : s);
 
   const defaults = () => ({
-    family: "dragodinde", level: 100, opti: false, optiVal: 20, takeza: false, pace: "equilibre", v: 3,
+    family: "dragodinde", level: "auto", opti: false, optiVal: 20, takeza: false, pace: "equilibre", v: 4,
     genMin: 2, genMax: 10, openGen: null, showStock: false,
     pens: 3, rate: 20, tab: "routine", onboarded: false,
     born: { dragodinde: {}, muldo: {}, volkorne: {} }, stock: { dragodinde: {}, muldo: {}, volkorne: {} },
@@ -472,7 +475,9 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       if (saved.onboarded === undefined) state.onboarded = Object.values(state.born).some((b) => Object.keys(b).length);
       // v3 : le rythme (tours de clonage, taille des sessions) remplace l'ancienne case « clonage ».
       if (!["calme", "equilibre", "tryhard"].includes(state.pace)) state.pace = "equilibre";
-      state.v = 3;
+      // v4 : le niveau des parents devient conseillé génération par génération.
+      if (!saved.v || saved.v < 4) state.level = "auto";
+      state.v = 4;
     }
   } catch (e) { /* stockage indisponible : valeurs par défaut */ }
   const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} };
@@ -494,19 +499,46 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   };
   const firstOpenGen = (fam) => { for (let g = 2; g <= 10; g++) if (bornCount(fam, g) < genList(fam, g).length) return g; return 2; };
 
-  function odds(s = state) {
-    const lvl = 0.15 * s.level * 2, opti = s.opti ? Number(s.optiVal) : 0, tak = s.takeza ? 20 : 0;
-    return { lvl, opti, tak, p: Math.min(100, 30 + lvl + opti + tak) / 100 };
+  // Chances pour un bébé de génération g : le niveau « auto » prend le niveau conseillé de cette génération.
+  function odds(s = state, g = 2) {
+    const L = levelFor(s, g), lvl = 0.15 * L * 2, opti = s.opti ? Number(s.optiVal) : 0, tak = s.takeza ? 20 : 0;
+    return { L, lvl, opti, tak, p: Math.min(100, 30 + lvl + opti + tak) / 100 };
   }
+  // XP de monture : 172 668 pour le niveau 100, 867 582 pour le 200 (≈ niveau^2,33). Jauge Tier 4 : 4 XP/s pour tout l'enclos.
+  const xpFor = (L) => (L <= 1 ? 0 : 172668 * Math.pow(L / 100, 2.33));
+  const xpHours = (L) => xpFor(L) / 4 / 3600;
+  // Hypothèse : monter une monture au niveau 100 (≈ 12 h de jauge partagées par 10 montures, plus le carburant) coûte autant que 5 captures.
+  const LV100_COST = 5;
+  const lvCost = (L) => (LV100_COST * xpFor(L)) / xpFor(100);
+  // Niveau le plus rentable par génération : on compare le coût d'un bébé réussi (parents + montée de niveau) / chances.
+  // Les parents de génération 1 sont des captures bon marché ; plus la génération monte, plus un parent vaut cher.
+  function recoLevels(s = state) {
+    const bonus = (s.opti ? Number(s.optiVal) : 0) + (s.takeza ? 20 : 0), reuse = paceReuse(s), out = {};
+    const pOf = (L) => Math.min(100, 30 + 0.3 * L + bonus) / 100;
+    const cand = [1, 60, 100, 150, 200], full = Math.ceil((70 - bonus) / 0.3 - 1e-9);
+    if (full > 1 && full < 200 && !cand.includes(full)) cand.push(full);
+    let v = 1;
+    for (let g = 2; g <= 10; g++) {
+      let best = null;
+      for (const L of cand.sort((a, b) => a - b)) {
+        const c = (2 * (v * reuse + lvCost(L))) / pOf(L);
+        if (!best || c < best.c - 1e-9) best = { L, c };
+      }
+      out[g] = best.L; v = best.c;
+    }
+    return out;
+  }
+  const levelFor = (s, g) => (s.level === "auto" ? recoLevels(s)[g] || 1 : Number(s.level));
 
   // Planificateur : remonte la demande de la génération 10 vers la génération 1.
   function plan(fam, s = state) {
     const mounts = DATA[fam], born = s.born[fam], stock = s.stock[fam];
-    const { p } = odds(s);
+    const pg = {};
+    for (let g = 2; g <= 10; g++) pg[g] = odds(s, g).p;
     const reuse = paceReuse(s);
     const unit = {};
     for (const m of [...mounts].sort((a, b) => a.gen - b.gen)) {
-      unit[m.id] = m.gen === 1 ? 1 : Math.min(...m.recipes.map(([a, b]) => (unit[a] + unit[b]) * reuse / p));
+      unit[m.id] = m.gen === 1 ? 1 : Math.min(...m.recipes.map(([a, b]) => (unit[a] + unit[b]) * reuse / pg[m.gen]));
     }
     const need = {};
     for (const m of mounts) if (m.gen >= 2 && m.gen >= s.genMin && m.gen <= s.genMax && !born[m.id]) need[m.id] = 1;
@@ -519,6 +551,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       for (const m of mounts.filter((x) => x.gen === g)) {
         const nb = births(m.id, demand[m.id] || 0);
         if (nb <= 1e-9) continue;
+        const p = pg[m.gen];
         let left = nb / p;
         const alloc = m.recipes.map(() => 0);
         while (left > 1e-9) {
@@ -543,7 +576,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       .map((m) => ({ m, n: Math.max(0, (demand[m.id] || 0) - st(m.id)) })).filter((c) => c.n > 1e-9);
     let totalBreed = 0, newOnes = 0;
     for (const [id, r] of Object.entries(result)) { totalBreed += r.breedings; if (!born[id]) newOnes++; }
-    return { result, captures, demand, totalBreed, newOnes, p, totalCaptures: captures.reduce((s2, c) => s2 + Math.ceil(c.n - 1e-9), 0) };
+    return { result, captures, demand, totalBreed, newOnes, p: pg[2], pAt: (g) => pg[g] || pg[2], totalCaptures: captures.reduce((s2, c) => s2 + Math.ceil(c.n - 1e-9), 0) };
   }
 
   /* ---------- Barre des familles ---------- */
@@ -682,7 +715,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   }
 
   function wizardHtml() {
-    const levels = [[1, "Juste capturés"], [60, "60"], [100, "100"], [150, "150"], [200, "200 (max)"]];
+    const levels = [["auto", "Le plus rentable"], [1, "Juste capturés"], [100, "100"], [200, "200 (max)"]];
     return `<div class="card wiz">
       <div class="view-head"><span class="eyebrow">Bienvenue, éleveur</span><h1>Ta routine d'élevage en 4 questions</h1>
         <p class="lead">Le site te dira ensuite quoi faire, étape par étape : quoi capturer, quoi mettre en enclos, quoi accoupler, jusqu'aux succès de génération 10.</p></div>
@@ -692,8 +725,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         <select id="wizUpTo"><option value="1">Je débute : rien n'est encore né</option>${[2, 3, 4, 5, 6, 7, 8, 9].map((g) => `<option value="${g}" ${wizUpTo === g ? "selected" : ""}>J'ai fait naître toutes les générations jusqu'à la ${g}</option>`).join("")}</select>
         <span class="note">Tu pourras corriger monture par monture dans le registre.</span></div>
       <div class="q"><b><span class="qn">3</span>Quel niveau auront tes parents ?</b>
-        <div class="presets lg">${levels.map(([v, l]) => `<button type="button" data-level="${v}" aria-pressed="${state.level === v}">${l}</button>`).join("")}</div>
-        <span class="note">Plus ils sont hauts, moins il faut d'accouplements (${fmt1.format(odds().p * 100)} % de réussite avec ce choix). Dans le doute, garde 100.</span></div>
+        <div class="presets lg">${levels.map(([v, l]) => `<button type="button" data-level="${v}" aria-pressed="${String(state.level) === String(v)}">${l}</button>`).join("")}</div>
+        <span class="note">${state.level === "auto" ? "Le site te dit, génération par génération, s'il vaut la peine de monter tes parents : inutile au début, rentable sur les hautes générations. Conseillé." : `${fmt1.format(odds().p * 100)} % de réussite avec ce choix, pour toutes les générations.`}</span></div>
       <div class="q"><b><span class="qn">4</span>À quel rythme veux-tu jouer ?</b>
         ${paceButtons(true)}
         <span class="note">${paceOf().desc} Tu pourras changer en haut de ta routine.</span></div>
@@ -702,6 +735,18 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     </div>`;
   }
 
+  // Conseil de la jauge d'expérience pour les parents de la génération g.
+  function levelTip(g) {
+    const L = levelFor(state, g);
+    if (L <= 1) return `<div class="tip"><span class="ic">i</span><p><b>Pas besoin de monter leur niveau.</b> Pour la génération ${g}, refaire des captures coûte moins cher que la jauge d'expérience et son carburant.</p></div>`;
+    return `<div class="tip"><span class="ic">i</span><p><b>Monte-les au niveau ${L}</b> avant l'accouplement (${fmt1.format(odds(state, g).p * 100)} % de réussite au lieu de ${fmt1.format(odds({ ...state, level: 1 }, g).p * 100)} %). Active la jauge d'expérience dans leurs enclos, en même temps que les autres : ≈ ${hours(xpHours(L) * 3600)} au Tier 4, pour tout l'enclos d'un coup.</p></div>`;
+  }
+  function levelTable() {
+    const reco = recoLevels();
+    return `<div class="sub"><b>Niveau le plus rentable par génération</b>
+      <div class="lvtab">${[2, 3, 4, 5, 6, 7, 8, 9, 10].map((g) => `<span><small>Gén. ${g}</small><b class="num">${reco[g] === 1 ? "—" : reco[g]}</b><small class="num">${fmt1.format(odds({ ...state, level: "auto" }, g).p * 100)} %</small></span>`).join("")}</div>
+      <p class="small muted">« — » : inutile de monter les parents, les captures coûtent moins cher. Calcul : monter une monture au niveau 100 (≈ 12 h de jauge Tier 4 pour tout l'enclos, plus le carburant) compte comme 5 captures, et le niveau 200 demande 5 fois plus d'XP que le 100. Plus une génération est haute, plus ses parents valent cher, plus il est rentable de les monter.</p></div>`;
+  }
   function stepSummary(key, fam, info, tr, pl) {
     switch (key) {
       case "parents": {
@@ -710,8 +755,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         if (tr.t > 1) return `${n} ${plural(n, "clone")} à remettre au travail`;
         return `${n} ${plural(n, "parent")}${ids.some((id) => index[fam][id].gen === 1) ? ", à capturer" : ""}`;
       }
-      case "enclos": { const c = sessionCalc(tr.breed * 2); return `${tr.breed * 2} montures · ${c.sessions} ${plural(c.sessions, "session")} de ${c.sp} ${plural(c.sp, "enclos", "enclos")}`; }
-      case "accouple": return `${tr.breed} ${plural(tr.breed, "accouplement")} à ${fmt1.format(pl.p * 100)} % de réussite`;
+      case "enclos": { const c = sessionCalc(tr.breed * 2), L = levelFor(state, info.g); return `${tr.breed * 2} montures · ${c.sessions} ${plural(c.sessions, "session")} de ${c.sp} ${plural(c.sp, "enclos", "enclos")}${L > 1 ? ` · niveau ${L}` : ""}`; }
+      case "accouple": return `${tr.breed} ${plural(tr.breed, "accouplement")} à ${fmt1.format(pl.pAt(info.g) * 100)} % de réussite`;
       case "naissances": {
         const rows = birthRows(fam, info, info.g), got = rows.reduce((x, r) => x + Math.min(r.got, r.target), 0), tot = rows.reduce((x, r) => x + r.target, 0);
         return `${got} / ${tot} ${plural(tot, "bébé")} ${plural(tot, "obtenu")}${info.fresh.length ? ` · ${info.fresh.length} ${plural(info.fresh.length, "nouveau succès", "nouveaux succès")} à valider` : ""}`;
@@ -754,13 +799,15 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
           <span><b class="num">${c.sessions}</b> ${plural(c.sessions, "session")} de ${c.sp} ${plural(c.sp, "enclos", "enclos")} (${10 * c.sp} places)</span><span><b class="num">≈ ${hours(c.waveSec)}</b> par session</span></div>
         <p>Il faut 20 000 en endurance, maturité et amour, mais chaque jauge ne monte que dans une plage de sérénité. Trie tes montures en groupes, puis remplis un enclos par groupe.</p>
         ${sorterHtml()}
+        ${levelTip(g)}
         <p class="note">Après chaque passage en enclos, remets les compteurs à zéro et refais le tri : les montures changent de groupe jusqu'à être toutes « Prêtes ». <a href="#enclos">Régler mes enclos</a></p>`;
     }
     if (key === "accouple") {
       const tips = [];
-      if (g >= 8 && pl.p < 0.9) tips.push("Pour les générations 8 à 10, monte d'abord tes parents (jauge d'expérience) : au niveau 200 avec une Optimakina, chaque accouplement réussit.");
+      const reco = recoLevels()[g];
+      if (state.level !== "auto" && reco !== Number(state.level)) tips.push(`Pour cette génération, le niveau le plus rentable est ${reco === 1 ? "de ne pas monter tes parents" : `le niveau ${reco}`} (tu as choisi ${state.level}). <a href="#conditions">Passer en niveau conseillé</a>`);
       if (g >= 9 && !state.takeza) tips.push("Garde si possible ces accouplements pour le jour de Takeza : +20 % de chances.");
-      return `<div class="odds"><span class="big num">${fmt1.format(pl.p * 100)} %</span><span>de chances d'obtenir la nouvelle couleur à chaque accouplement.<br><a href="#conditions">Modifier mes conditions</a></span></div>
+      return `<div class="odds"><span class="big num">${fmt1.format(pl.pAt(g) * 100)} %</span><span>de chances d'obtenir la nouvelle couleur à chaque accouplement.<br><a href="#conditions">Modifier mes conditions</a></span></div>
         <div class="cross-list">${tr.crosses.map((c) => `<div class="cross"><span class="pair">${swatch(c.a)}${esc(c.a.name)} <span class="x">×</span> ${swatch(c.b)}${esc(c.b.name)}</span>
           <span class="cnt">× ${c.n}</span><span class="note" style="grid-column:1/-1">pour obtenir ${esc(c.m.name)}</span></div>`).join("")}</div>
         <p class="note">À l'étable, choisis un mâle et une femelle féconds : le bébé naît tout de suite et les deux parents deviennent stériles.</p>
@@ -907,8 +954,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
           })()}
           <button type="button" class="btn primary" data-act="next-goal">Passer à l'objectif suivant</button></div>`)
       : (() => {
-          const rc = rescueCrosses(fam, info, sp.p), nb = rc.reduce((s2, c) => s2 + c.n, 0);
-          return `<div class="empty"><h2>Il manque encore des bébés</h2><p>Pas de chance sur ces accouplements, c'est normal avec ${fmt1.format(sp.p * 100)} % de réussite. Il te manque :</p>
+          const rc = rescueCrosses(fam, info, sp.pAt(g)), nb = rc.reduce((s2, c) => s2 + c.n, 0);
+          return `<div class="empty"><h2>Il manque encore des bébés</h2><p>Pas de chance sur ces accouplements, c'est normal avec ${fmt1.format(sp.pAt(g) * 100)} % de réussite. Il te manque :</p>
           <div class="chips">${rc.map((c) => `<span class="chip">${swatch(index[fam][c.m])}${esc(index[fam][c.m].name)} <span class="num">× ${c.miss}</span></span>`).join("")}</div>
           <p>Le rattrapage ne prévoit que ${nb} ${plural(nb, "accouplement")} pour ces bébés-là, avec tes bébés ratés et tes clones en priorité.</p>
           <div class="row">${next ? `<button type="button" class="btn" data-act="next-gen" data-gen="${next}">Passer quand même à la génération ${next}</button>` : ""}
@@ -963,10 +1010,11 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       <h3>Tes chances de réussite</h3>
       <div class="gauge" id="gauge"></div>
       <div class="field">
-        <label for="level">Niveau moyen de tes parents : <span class="num" id="levelOut">${state.level}</span></label>
-        <div class="presets">${[[1, "Juste capturés (1)"], [60, "60"], [100, "100"], [150, "150"], [200, "200 (max)"]].map(([v, l]) => `<button type="button" data-level="${v}" aria-pressed="${state.level === v}">${l}</button>`).join("")}</div>
-        <input type="range" id="level" min="1" max="200" step="1" value="${state.level}">
-        <span class="small muted">Les montures montent de niveau dans l'enclos avec la jauge d'expérience : environ 12 h pour le niveau 100.</span>
+        <label for="level">Niveau de tes parents : <span class="num" id="levelOut">${state.level === "auto" ? "conseillé selon la génération" : state.level}</span></label>
+        <div class="presets">${[["auto", "Le plus rentable"], [1, "Juste capturés (1)"], [60, "60"], [100, "100"], [150, "150"], [200, "200 (max)"]].map(([v, l]) => `<button type="button" data-level="${v}" aria-pressed="${String(state.level) === String(v)}">${l}</button>`).join("")}</div>
+        ${state.level === "auto" ? "" : `<input type="range" id="level" min="1" max="200" step="1" value="${state.level}">`}
+        <span class="small muted">Les montures montent de niveau dans l'enclos avec la jauge d'expérience : environ 12 h pour le niveau 100, 60 h pour le 200.</span>
+        ${levelTable()}
       </div>
       <div class="opts">
         <label class="opt" for="opti"><input type="checkbox" id="opti" ${state.opti ? "checked" : ""}>
@@ -989,14 +1037,14 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   }
   const genOpts = (sel) => [2, 3, 4, 5, 6, 7, 8, 9, 10].map((g) => `<option value="${g}" ${g === sel ? "selected" : ""}>génération ${g}</option>`).join("");
   function renderGauge() {
-    const o = odds();
+    const gNow = (state.onboarded && routineCtx(state.family).g) || 2, o = odds(state, gNow);
     let left = 100;
     const seg = (v) => { const w = Math.max(0, Math.min(left, v)); left -= w; return w; };
     const parts = [["seg-base", "Base", seg(30), 30], ["seg-lvl", "Niveaux", seg(o.lvl), o.lvl], ["seg-opti", "Optimakina", seg(o.opti), o.opti], ["seg-tak", "Takeza", seg(o.tak), o.tak]];
     const inTen = Math.round(o.p * 10);
     $("gauge").innerHTML = `
       <div class="top"><span class="big num">${fmt1.format(o.p * 100)} %</span>
-        <span><b>de chances que le bébé ait la nouvelle couleur</b><br><span class="small muted">En cas d'échec, il reprend une couleur de ses parents ou grands-parents.</span></span></div>
+        <span><b>de chances que le bébé ait la nouvelle couleur</b>${state.level === "auto" ? ` <span class="small muted">(génération ${gNow}, niveau ${o.L})</span>` : ""}<br><span class="small muted">En cas d'échec, il reprend une couleur de ses parents ou grands-parents.</span></span></div>
       <div class="meter" aria-hidden="true">${parts.map(([c, , w]) => `<i class="${c}" style="width:${w}%"></i>`).join("")}</div>
       <div class="legend">${parts.filter((x) => x[3] > 0).map(([c, l, , v]) => `<span><i class="${c}"></i>${l} +${fmt1.format(v)} %</span>`).join("")}${30 + o.lvl + o.opti + o.tak > 100 ? "<span>plafonné à 100 %</span>" : ""}</div>
       <div class="row small"><span class="dots" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i < inTen ? "on" : ""}"></i>`).join("")}</span>
@@ -1034,9 +1082,9 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     }
     let html = `<div class="stats">
       <div class="stat"><b>${pl.newOnes}</b><span>${plural(pl.newOnes, "naissance")} pour les succès</span></div>
-      <div class="stat"><b>≈ ${up(pl.totalBreed)}</b><span>accouplements à ${fmt1.format(pl.p * 100)} %</span></div>
+      <div class="stat"><b>≈ ${up(pl.totalBreed)}</b><span>accouplements ${state.level === "auto" ? `de ${fmt1.format(pl.pAt(2) * 100)} à ${fmt1.format(pl.pAt(10) * 100)} %` : `à ${fmt1.format(pl.p * 100)} %`}</span></div>
       <div class="stat"><b>${fmt0.format(pl.totalCaptures)}</b><span>captures de génération 1</span></div></div>`;
-    if (pl.p < 1) {
+    if (state.level !== "auto" && pl.p < 1) {
       const best = plan(fam, { ...state, level: 200, opti: true, optiVal: 20 });
       const gain = 1 - best.totalBreed / pl.totalBreed;
       if (gain > 0.05) html += `<div class="tip"><span class="ic">!</span><p>Avec des parents niveau 200 et une Optimakina (100 % de réussite), il ne faudrait qu'environ <b class="num">${up(best.totalBreed)}</b> accouplements et <b class="num">${fmt0.format(best.totalCaptures)}</b> captures : <b>${Math.round(gain * 100)} % de travail en moins</b>. Monter tes parents vaut surtout le coup pour les générations 8 à 10. <a href="#conditions">Changer mes réglages</a></p></div>`;
@@ -1388,7 +1436,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     const paceBtn = e.target.closest("[data-pace]");
     if (paceBtn) { state.pace = paceBtn.dataset.pace; peek = null; return update(); }
     const lvl = e.target.closest("[data-level]");
-    if (lvl) { state.level = Number(lvl.dataset.level); return update(); }
+    if (lvl) { state.level = lvl.dataset.level === "auto" ? "auto" : Number(lvl.dataset.level); return update(); }
     const a = e.target.closest("[data-act]");
     if (!a) return;
     const fam = state.family;
@@ -1428,7 +1476,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       case "new-wave": {
         const r = routineOf(fam), ctx = routineCtx(fam), g = ctx.g, list = ((r.rescue = r.rescue || {})[g] = r.rescue[g] || []);
         const t = Math.max(ctx.info.tours, ctx.tr.t) + 1;
-        list.push({ t, k: list.length + 1, crosses: rescueCrosses(fam, ctx.info, ctx.sp.p) });
+        list.push({ t, k: list.length + 1, crosses: rescueCrosses(fam, ctx.info, ctx.sp.pAt(g)) });
         r.tour = { ...r.tour, [g]: t }; r.done[`${g}-${t}`] = {}; peek = null;
         softUpdate(); focusCurrentStep(); break;
       }
@@ -1485,7 +1533,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     if (e.target.id !== "level") return;
     state.level = Number(e.target.value);
     $("levelOut").textContent = state.level;
-    document.querySelectorAll("[data-level]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.level) === state.level)));
+    document.querySelectorAll("[data-level]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.level === String(state.level))));
     renderGauge(); softUpdate();
   });
   document.addEventListener("change", (e) => {
