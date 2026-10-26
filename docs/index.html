@@ -543,7 +543,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       .map((m) => ({ m, n: Math.max(0, (demand[m.id] || 0) - st(m.id)) })).filter((c) => c.n > 1e-9);
     let totalBreed = 0, newOnes = 0;
     for (const [id, r] of Object.entries(result)) { totalBreed += r.breedings; if (!born[id]) newOnes++; }
-    return { result, captures, totalBreed, newOnes, p, totalCaptures: captures.reduce((s2, c) => s2 + Math.ceil(c.n - 1e-9), 0) };
+    return { result, captures, demand, totalBreed, newOnes, p, totalCaptures: captures.reduce((s2, c) => s2 + Math.ceil(c.n - 1e-9), 0) };
   }
 
   /* ---------- Barre des familles ---------- */
@@ -616,6 +616,19 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     const rows = info.rows.map((x) => ({ m: x.m, target: Math.max(1, Math.ceil(x.r.births - 1e-9)) }));
     for (const id of Object.keys(got)) if (got[id] && index[fam][id].gen === g && !rows.some((x) => x.m.id === id)) rows.push({ m: index[fam][id], target: 1 });
     return rows.map((x) => ({ ...x, got: got[x.m.id] || 0 })).sort((a, b) => a.m.name.localeCompare(b.m.name, "fr"));
+  }
+  // Réserve après l'objectif : bébés notés + réserve d'avant, moins les parents consommés par le plan de l'objectif.
+  function reserveAfter(fam, sp) {
+    const got = routineOf(fam).got || {}, stock = state.stock[fam];
+    const ids = new Set([...Object.keys(got), ...Object.keys(stock), ...Object.keys(sp.demand)]);
+    const out = [];
+    for (const id of ids) {
+      if (!index[fam][id]) continue;
+      const before = Number(stock[id]) || 0, used = Math.ceil((sp.demand[id] || 0) - 1e-9);
+      const after = Math.max(0, before + (got[id] || 0) - used);
+      if (after !== before) out.push({ m: index[fam][id], before, after });
+    }
+    return out.sort((a, b) => b.m.gen - a.m.gen || a.m.name.localeCompare(b.m.name, "fr"));
   }
   const planGens = (fam, pl) => [...new Set(Object.keys(pl.result).map((id) => index[fam][id].gen))].sort((a, b) => a - b);
   function currentGen(fam, gens) {
@@ -857,6 +870,12 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         ? `<div class="empty"><h2>Génération ${g} prête</h2><p>Tu as tous les bébés qu'il faut. Prochaine étape du chemin : la génération ${next}${next === T ? ", celle des succès" : ""}.</p>
           <button type="button" class="btn primary" data-act="next-gen" data-gen="${next}">Passer à la génération ${next}</button></div>`
         : `<div class="empty"><h2>Objectif atteint : génération ${T}</h2><p>Tous les succès de cette génération sont validés. Bravo, éleveur.</p>
+          ${(() => {
+            const kept = reserveAfter(fam, sp).filter((x) => x.after > x.before);
+            return kept.length ? `<p>Garde ces bébés, ils sont encore fertiles : ils passeront dans ta réserve et serviront de parents pour la suite.</p>
+              <p class="small"><b>${kept.map((x) => `${x.after - x.before} ${esc(x.m.name)}`).join(", ")}</b></p>
+              <p class="small muted">Tu en as vendu ? Corrige ta réserve dans le Registre après avoir validé.</p>` : "";
+          })()}
           <button type="button" class="btn primary" data-act="next-goal">Passer à l'objectif suivant</button></div>`)
       : `<div class="empty"><h2>Il manque encore des bébés</h2><p>Pas de chance sur ces accouplements. Refais quelques accouplements des mêmes croisements avec tes bébés ratés, tes clones ou de nouvelles captures, puis note les naissances.</p>
           <div class="row">${next ? `<button type="button" class="btn" data-act="next-gen" data-gen="${next}">Passer quand même à la génération ${next}</button>` : ""}
@@ -1359,8 +1378,17 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         softUpdate(); focusCurrentStep(); break;
       }
       case "next-goal": {
-        const r = routineOf(fam); r.pick = null; r.target = null; r.auto = {}; peek = null;
-        update(); window.scrollTo({ top: 0 }); toast(routineOf(fam).target != null ? `Nouvel objectif : génération ${routineOf(fam).target}.` : "Tous les succès visés sont bouclés !"); break;
+        const r = routineOf(fam), ctx = routineCtx(fam);
+        const snapR = JSON.parse(JSON.stringify(r)), snapS = { ...state.stock[fam] };
+        const moved = ctx.T != null ? reserveAfter(fam, ctx.sp) : [];
+        for (const x of moved) { if (x.after) state.stock[fam][x.m.id] = x.after; else delete state.stock[fam][x.m.id]; }
+        const kept = moved.reduce((n, x) => n + Math.max(0, x.after - x.before), 0);
+        r.pick = null; r.target = null; r.auto = {}; peek = null;
+        update(); window.scrollTo({ top: 0 });
+        const nt = routineOf(fam).target;
+        toast(`${nt != null ? `Nouvel objectif : génération ${nt}.` : "Tous les succès visés sont bouclés !"}${kept ? ` ${kept} ${plural(kept, "bébé")} en réserve.` : ""}`,
+          () => { state.routine[fam] = snapR; state.stock[fam] = snapS; update(); });
+        break;
       }
       case "next-gen": routineOf(fam).gen = Number(a.dataset.gen); peek = null; update(); window.scrollTo({ top: 0 }); break;
       case "new-wave": { const r = routineOf(fam); r.done[`${a.dataset.gen}-${a.dataset.tour}`] = {}; peek = null; softUpdate(); focusCurrentStep(); break; }
