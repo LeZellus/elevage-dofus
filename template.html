@@ -509,7 +509,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         let left = nb / p;
         const alloc = m.recipes.map(() => 0);
         while (left > 1e-9) {
-          const u = Math.min(1, left);
+          // Paquets d'un accouplement, ou d'1/32 du reste quand il est grand : le calcul reste instantané même à plusieurs millions.
+          const u = Math.min(left, Math.max(1, left / 32));
           let best = 0, bestCost = Infinity;
           m.recipes.forEach(([a, b], i) => {
             const cost = marginal(a, u * reuse) + marginal(b, u * reuse);
