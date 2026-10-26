@@ -593,6 +593,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     ["clone", "Clone tes stériles", "Clones faits"],
   ];
   function stepLabel(k, label, tr) {
+    if (k === "parents" && tr.rescue) return "Réunis les parents du rattrapage";
     if (k === "parents" && tr.t > 1) return "Sors tes clones de l'étable";
     if (k === "clone") return tr.last ? "Clone tes stériles (bonus)" : "Clone tes stériles pour le tour suivant";
     return label;
@@ -650,6 +651,22 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     for (const c of crosses) { parents[c.a.id] = (parents[c.a.id] || 0) + c.n; parents[c.b.id] = (parents[c.b.id] || 0) + c.n; }
     return { t, last: t >= info.tours, crosses, parents, breed: crosses.reduce((s, c) => s + c.n, 0) };
   }
+  // Rattrapage : uniquement les accouplements qui manquent, figés au moment où le joueur le lance.
+  function rescueTour(fam, rs) {
+    const crosses = rs.crosses.map((c) => ({ m: index[fam][c.m], a: index[fam][c.a], b: index[fam][c.b], n: c.n })), parents = {};
+    for (const c of crosses) { parents[c.a.id] = (parents[c.a.id] || 0) + c.n; parents[c.b.id] = (parents[c.b.id] || 0) + c.n; }
+    return { t: rs.t, last: true, rescue: rs.k, crosses, parents, breed: crosses.reduce((s, c) => s + c.n, 0) };
+  }
+  function rescueCrosses(fam, info, p) {
+    const out = [];
+    for (const x of birthRows(fam, info, info.g)) {
+      const miss = x.target - x.got;
+      if (miss <= 0) continue;
+      const c = info.crosses.filter((y) => y.m.id === x.m.id).sort((u, v) => v.n - u.n)[0];
+      if (c) out.push({ m: c.m.id, a: c.a.id, b: c.b.id, n: Math.ceil(miss / p - 1e-9), miss });
+    }
+    return out;
+  }
   function sessionCalc(count) {
     const c = penCalc(count), sp = paceOf().pens(c.pens);
     return { ...c, sp, sessions: Math.max(1, Math.ceil(count / (10 * sp))) };
@@ -680,6 +697,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     switch (key) {
       case "parents": {
         const ids = Object.keys(tr.parents), n = ids.reduce((s, id) => s + tr.parents[id], 0);
+        if (tr.rescue) return `${n} ${plural(n, "parent")} : bébés ratés, clones, puis captures`;
         if (tr.t > 1) return `${n} ${plural(n, "clone")} à remettre au travail`;
         return `${n} ${plural(n, "parent")}${ids.some((id) => index[fam][id].gen === 1) ? ", à capturer" : ""}`;
       }
@@ -703,6 +721,13 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       const uses = (id) => tr.crosses.filter((c) => c.a.id === id || c.b.id === id);
       const mp = par.find((x) => uses(x.m.id).length > 1);
       const multi = mp && `Par exemple, ${esc(mp.m.name)} sert dans ${uses(mp.m.id).length} croisements : ${uses(mp.m.id).map((c) => `${c.n} avec ${esc((c.a.id === mp.m.id ? c.b : c.a).name)}`).join(", ")}.`;
+      if (tr.rescue) {
+        const wild = par.filter((x) => x.m.gen === 1);
+        return `<p>Ce rattrapage ne vise que les bébés qui te manquent. Il te faut :</p>
+        <div class="chips">${par.map(chip).join("")}</div>
+        <p>Pioche dans cet ordre : <b>1.</b> tes bébés ratés de ces couleurs, <b>2.</b> tes clones, <b>3.</b> ta réserve${wild.length ? `, <b>4.</b> des captures pour le reste. ${f.where}` : "."}</p>
+        <p>Prends autant de mâles que de femelles : chaque accouplement demande un mâle et une femelle.</p>`;
+      }
       if (tr.t > 1) return `<p>Sors de l'étable les clones faits à la fin du tour ${tr.t - 1}. Il te faut :</p>
         <div class="chips">${par.map(chip).join("")}</div>
         <p class="note">Ces nombres couvrent les accouplements de ce tour.${multi ? " " + multi : ""} S'il te manque un clone, un bébé raté de la même couleur peut le remplacer.</p>`;
@@ -769,15 +794,15 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     if (T == null && r.target != null && inRange(r.target) && (open(r.target) || Object.keys(r.auto || {}).length)) T = r.target;
     for (let x = state.genMin; T == null && x <= state.genMax; x++) if (open(x)) T = x;
     if (T == null) return { T: null };
-    if (r.target !== T) { r.target = T; r.gen = null; r.done = {}; r.tour = {}; r.got = {}; r.auto = {}; save(); }
+    if (r.target !== T) { r.target = T; r.gen = null; r.done = {}; r.tour = {}; r.got = {}; r.auto = {}; r.rescue = {}; save(); }
     // Plan figé : les succès validés avec les compteurs ne changent pas les quantités en cours de route.
     const bornThen = { ...state.born[fam] };
     for (const id of Object.keys(r.auto || {})) delete bornThen[id];
     const sp = plan(fam, { ...state, genMin: T, genMax: T, born: { ...state.born, [fam]: bornThen } });
     const gens = planGens(fam, sp), g = currentGen(fam, gens);
     const info = { ...phaseInfo(fam, sp, g), T };
-    const t = Math.min(Math.max(1, (r.tour || {})[g] || 1), info.tours);
-    return { T, sp, gens, g, info, tr: tourInfo(info, t) };
+    const want = Math.max(1, (r.tour || {})[g] || 1), rs = ((r.rescue || {})[g] || []).find((x) => x.t === want);
+    return { T, sp, gens, g, info, tr: rs ? rescueTour(fam, rs) : tourInfo(info, Math.min(want, info.tours)) };
   }
 
   function renderRoutine(pl, ctx) {
@@ -829,12 +854,16 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         ${gens.length > 1 ? `<p class="note">Pour y arriver, produis d'abord les parents des générations précédentes, dans cet ordre :</p>${path}` : ""}
       </div>${ring}${pace}${road}</div>`;
 
-    const tours = info.tours > 1 ? `<ol class="path tours" aria-label="Tours de cette génération">${Array.from({ length: info.tours }, (_, i) => {
+    const rescues = (routineOf(fam).rescue || {})[g] || [];
+    const tours = info.tours > 1 || rescues.length ? `<ol class="path tours" aria-label="Tours de cette génération">${Array.from({ length: info.tours }, (_, i) => {
         const n = tourInfo(info, i + 1).breed;
         return `<li class="${i + 1 < tr.t ? "done" : i + 1 === tr.t ? "now" : ""}"><b>${i + 1 < tr.t ? "✓ " : ""}Tour ${i + 1}</b><small>${n} ${plural(n, "accouplement")}${i ? ", avec des clones" : ""}</small></li>`;
+      }).join("")}${rescues.map((x) => {
+        const n = x.crosses.reduce((s2, c) => s2 + c.n, 0);
+        return `<li class="${x.t < tr.t ? "done" : x.t === tr.t ? "now" : ""}"><b>${x.t < tr.t ? "✓ " : ""}Rattrapage${rescues.length > 1 ? ` ${x.k}` : ""}</b><small>${n} ${plural(n, "accouplement")}</small></li>`;
       }).join("")}</ol>` : "";
     const now = `<div class="now-bar"><div><span class="eyebrow">Maintenant</span>
-        <h2>Génération ${g}${g === T ? "" : " · des parents"}${info.tours > 1 ? ` · tour ${tr.t} sur ${info.tours}` : ""}</h2></div>
+        <h2>Génération ${g}${g === T ? "" : " · des parents"}${tr.rescue ? ` · rattrapage${tr.rescue > 1 ? ` ${tr.rescue}` : ""}` : info.tours > 1 ? ` · tour ${tr.t} sur ${info.tours}` : ""}</h2></div>
         <div class="now-right"><span>${cur >= 0 && !finished ? `Étape ${cur + 1} sur ${STEPS.length}` : "Étapes faites"}</span>
         <span class="prog" aria-hidden="true">${STEPS.map(([k], i) => `<i class="${isDone(k) ? "on" : i === cur ? "cur" : ""}"></i>`).join("")}</span></div></div>${tours}`;
 
@@ -868,9 +897,14 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
               <p class="small muted">Tu en as vendu ? Corrige ta réserve dans le Registre après avoir validé.</p>` : "";
           })()}
           <button type="button" class="btn primary" data-act="next-goal">Passer à l'objectif suivant</button></div>`)
-      : `<div class="empty"><h2>Il manque encore des bébés</h2><p>Pas de chance sur ces accouplements. Refais quelques accouplements des mêmes croisements avec tes bébés ratés, tes clones ou de nouvelles captures, puis note les naissances.</p>
+      : (() => {
+          const rc = rescueCrosses(fam, info, sp.p), nb = rc.reduce((s2, c) => s2 + c.n, 0);
+          return `<div class="empty"><h2>Il manque encore des bébés</h2><p>Pas de chance sur ces accouplements, c'est normal avec ${fmt1.format(sp.p * 100)} % de réussite. Il te manque :</p>
+          <div class="chips">${rc.map((c) => `<span class="chip">${swatch(index[fam][c.m])}${esc(index[fam][c.m].name)} <span class="num">× ${c.miss}</span></span>`).join("")}</div>
+          <p>Le rattrapage ne prévoit que ${nb} ${plural(nb, "accouplement")} pour ces bébés-là, avec tes bébés ratés et tes clones en priorité.</p>
           <div class="row">${next ? `<button type="button" class="btn" data-act="next-gen" data-gen="${next}">Passer quand même à la génération ${next}</button>` : ""}
-          <button type="button" class="btn primary" data-act="new-wave" data-gen="${g}" data-tour="${tr.t}">Refaire un tour</button></div></div>`;
+          <button type="button" class="btn primary" data-act="new-wave" data-gen="${g}">Lancer le rattrapage</button></div></div>`;
+        })();
 
     el.innerHTML = head + now + steps + end;
   }
@@ -1382,7 +1416,13 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         break;
       }
       case "next-gen": routineOf(fam).gen = Number(a.dataset.gen); peek = null; update(); window.scrollTo({ top: 0 }); break;
-      case "new-wave": { const r = routineOf(fam); r.done[`${a.dataset.gen}-${a.dataset.tour}`] = {}; peek = null; softUpdate(); focusCurrentStep(); break; }
+      case "new-wave": {
+        const r = routineOf(fam), ctx = routineCtx(fam), g = ctx.g, list = ((r.rescue = r.rescue || {})[g] = r.rescue[g] || []);
+        const t = Math.max(ctx.info.tours, ctx.tr.t) + 1;
+        list.push({ t, k: list.length + 1, crosses: rescueCrosses(fam, ctx.info, ctx.sp.p) });
+        r.tour = { ...r.tour, [g]: t }; r.done[`${g}-${t}`] = {}; peek = null;
+        softUpdate(); focusCurrentStep(); break;
+      }
       case "stock-open":
         state.showStock = true; state.openGen = Number(a.dataset.gen); update(); setTab("registre");
         toast("Indique tes clones dans « En réserve » sous chaque monture."); break;
