@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@700;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* Layout : barre de familles fixe, bandeau « où j'en suis », puis 3 étapes aérées (cocher → régler → suivre le plan) et l'aide en accordéons. */
+/* Layout : barre fixe (familles + onglets), une vue à la fois. « Ma routine » guide génération par génération en 5 étapes ; registre, plan, enclos et aide sont des vues de référence. */
 :root {
   --bg: #f2f4ee;
   --surface: #fcfdf9;
@@ -49,7 +49,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+html { scroll-behavior: smooth; scroll-padding-top: 130px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55; margin: 0; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
@@ -83,48 +83,103 @@ button, input, select { font: inherit; color: inherit; }
 
 /* Barre du haut */
 .topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
-.topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: var(--s3) var(--s5); padding-block: var(--s3); flex-wrap: wrap; }
+.topbar .bar1 { display: flex; align-items: center; justify-content: space-between; gap: var(--s3) var(--s5); padding-block: var(--s3) var(--s2); flex-wrap: wrap; }
+.tabs { display: flex; gap: var(--s1); overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { border: 0; background: none; padding: 8px 14px 11px; cursor: pointer; font-weight: 700; color: var(--muted); white-space: nowrap; border-bottom: 3px solid transparent; display: inline-flex; gap: 6px; align-items: baseline; }
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tabs button .num { font-size: .78rem; color: var(--muted); font-weight: 500; }
+@media (max-width: 560px) { .tabs { justify-content: space-between; } .tabs button { padding-inline: 6px; font-size: .95rem; } .tabs button .num { display: none; } }
 .brand { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; white-space: nowrap; }
 .brand span { color: var(--accent); }
 .seg { display: flex; gap: var(--s1); padding: var(--s1); background: var(--sunken); border-radius: 999px; flex-wrap: wrap; }
-.seg button { border: 0; background: transparent; border-radius: 999px; padding: 7px 16px; cursor: pointer; font-weight: 700; display: inline-flex; gap: var(--s2); align-items: baseline; }
+.seg button { border: 0; background: transparent; border-radius: 999px; padding: 7px 16px; cursor: pointer; font-weight: 700; display: inline-flex; gap: var(--s2); align-items: baseline; white-space: nowrap; }
 .seg button .num { font-size: .78rem; color: var(--muted); font-weight: 500; }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--accent); box-shadow: var(--shadow); }
-@media (max-width: 560px) { .brand { display: none; } .seg { width: 100%; } .seg button { flex: 1; justify-content: center; padding: 7px 8px; } }
+@media (max-width: 560px) { .brand { display: none; } .seg { width: 100%; } .seg button { flex: 1; justify-content: center; padding: 7px 6px; gap: 4px; font-size: .95rem; } .seg button .num { font-size: .7rem; } }
 
-main .wrap { display: grid; gap: var(--s8); padding-block: var(--s7) var(--s8); }
+main .wrap { padding-block: var(--s6) var(--s8); }
+.view { display: grid; gap: var(--s5); }
+.view[hidden] { display: none; }
+.view-head { display: grid; gap: var(--s2); }
+.view-head p { color: var(--muted); max-width: 64ch; }
+.stack { display: grid; gap: var(--s5); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s5); display: grid; gap: var(--s5); box-shadow: var(--shadow); }
+@media (max-width: 520px) { .card { padding: var(--s4); } }
 
-/* Bandeau d'accueil */
-.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s6); align-items: center;
-  background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 6px); padding: var(--s6); box-shadow: var(--shadow); }
-.hero .txt { display: grid; gap: var(--s3); min-width: 0; }
-.hero .lead { font-size: 1.12rem; max-width: 56ch; }
-.hero .actions { display: flex; gap: var(--s3); flex-wrap: wrap; margin-top: var(--s2); }
-.ring { width: 150px; height: 150px; position: relative; flex: none; }
+/* Assistant de démarrage */
+.wiz { gap: var(--s6); }
+.wiz .lead { font-size: 1.08rem; }
+.wiz .q { display: grid; gap: var(--s3); }
+.wiz .q > b { display: flex; gap: var(--s3); align-items: center; font-size: 1.08rem; }
+.qn { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); font-family: var(--font-display); font-weight: 800; flex: none; }
+.wiz select { max-width: 100%; padding: 9px 12px; }
+.presets.lg button { padding: 10px 20px; font-size: 1rem; }
+
+/* Routine : en-tête */
+.rt-head { grid-template-columns: minmax(0, 1fr) auto; gap: var(--s4) var(--s5); align-items: center; }
+.rt-head .txt { display: grid; gap: var(--s2); min-width: 0; }
+.rt-head .lead { font-size: 1.12rem; }
+.prog { display: flex; gap: 6px; }
+.prog i { flex: 1; height: 8px; border-radius: 999px; background: var(--sunken); }
+.prog i.on { background: var(--good); }
+.prog i.cur { background: var(--accent); }
+.ring { width: 112px; height: 112px; position: relative; flex: none; }
 .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .ring .track { stroke: var(--sunken); }
 .ring .val { stroke: var(--accent); transition: stroke-dashoffset .4s ease; }
 .ring.full .val { stroke: var(--good); }
 .ring .lbl { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
-.ring .lbl b { font-family: var(--font-display); font-size: 2rem; font-weight: 800; line-height: 1; }
-.ring .lbl span { font-size: .8rem; color: var(--muted); }
-@media (max-width: 640px) { .hero { grid-template-columns: minmax(0, 1fr); padding: var(--s5); } .ring { width: 120px; height: 120px; order: -1; } }
-.howto { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s3); margin-top: calc(var(--s5) * -1 - var(--s4)); }
-.howto a { display: flex; gap: var(--s3); align-items: center; text-decoration: none; color: var(--ink); padding: var(--s3) var(--s4); border-radius: var(--radius-sm); }
-.howto a:hover { background: var(--surface); }
-.howto .k { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); font-weight: 800; flex: none; font-family: var(--font-display); }
-.howto a.done .k { background: var(--good); color: var(--surface); }
-@media (max-width: 900px) { .howto { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 640px) { .howto { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+.ring .lbl b { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; line-height: 1; }
+.ring .lbl span { font-size: .74rem; color: var(--muted); }
+.road-wrap { grid-column: 1 / -1; display: grid; gap: var(--s2); padding-top: var(--s4); border-top: 1px solid var(--line); }
+.road { display: flex; gap: 6px; }
+.road button { flex: 1 1 0; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: 6px 4px; display: grid; gap: 5px; justify-items: center; font-weight: 800; font-size: .88rem; cursor: pointer; }
+.road button .bar { width: 100%; max-width: 40px; height: 4px; }
+.road button.done { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.road button.now { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.road button:disabled { cursor: default; }
+.road button:disabled:not(.done) { opacity: .5; }
+@media (max-width: 560px) { .rt-head { grid-template-columns: minmax(0, 1fr); } .ring { display: none; } .road { gap: 3px; } .road button { font-size: .8rem; } }
 
-/* Étapes */
-.step { display: grid; gap: var(--s5); }
-.step-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s2) var(--s4); align-items: start; }
-.step-head .k { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; }
-.step-head > div { display: grid; gap: var(--s2); padding-top: 4px; }
-.step-head p { color: var(--muted); max-width: 64ch; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s5); display: grid; gap: var(--s5); box-shadow: var(--shadow); }
-@media (max-width: 520px) { .card { padding: var(--s4); } }
+.path { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s2); }
+.path li { display: grid; padding: 6px 14px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--line); line-height: 1.25; }
+.path li small { color: var(--muted); font-size: .8rem; }
+.path li.done { background: var(--good-soft); border-color: transparent; color: var(--good); }
+.path li.now { background: var(--accent-soft); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.now-bar { display: flex; justify-content: space-between; align-items: end; gap: var(--s3) var(--s5); flex-wrap: wrap; margin-top: var(--s3); }
+.now-right { display: grid; gap: 6px; justify-items: end; color: var(--muted); font-weight: 700; font-size: .9rem; }
+.now-right .prog { width: 220px; }
+@media (max-width: 560px) { .now-right { justify-items: start; } }
+
+/* Routine : étapes */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
+.st { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.st.now { border: 2px solid var(--accent); }
+.st-h { width: 100%; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: var(--s4); align-items: center; padding: var(--s4) var(--s5); background: none; border: 0; text-align: left; cursor: pointer; color: inherit; border-radius: var(--radius); }
+.st-h b { font-size: 1.08rem; display: block; line-height: 1.3; }
+.st-h small { display: block; color: var(--muted); font-size: .9rem; }
+.st-h .chev { color: var(--muted); font-size: .9rem; }
+.st .n { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--line); background: var(--bg); font-family: var(--font-display); font-weight: 800; }
+.st.now .n { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.st.done .n { background: var(--good); border-color: var(--good); color: var(--surface); }
+.st.done .st-h b { color: var(--muted); }
+.st-b { padding: 0 var(--s5) var(--s5) calc(var(--s5) + 36px + var(--s4)); display: grid; gap: var(--s4); }
+@media (max-width: 560px) { .st-h { padding: var(--s4); gap: var(--s3); } .st-b { padding: 0 var(--s4) var(--s4); } }
+.st-act { display: flex; gap: var(--s3); flex-wrap: wrap; align-items: center; padding-top: var(--s2); }
+.sub { display: grid; gap: var(--s2); }
+.mini { display: flex; gap: var(--s2) var(--s5); flex-wrap: wrap; }
+.mini span { color: var(--muted); }
+.mini b { color: var(--ink); font-size: 1.15rem; font-weight: 500; }
+.odds { display: flex; gap: var(--s4); align-items: center; flex-wrap: wrap; }
+.odds .big { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; line-height: 1; color: var(--accent); }
+.cross-list { display: grid; gap: var(--s2); }
+.cross { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px var(--s3); align-items: center; background: var(--bg); border-radius: var(--radius-sm); padding: var(--s3) var(--s4); }
+.cross .cnt { font-family: var(--font-data); font-size: 1.1rem; white-space: nowrap; }
+.cross .nm { display: inline-flex; gap: var(--s2); align-items: center; font-weight: 700; }
+.note { font-size: .9rem; color: var(--muted); }
+.empty { background: var(--good-soft); border-radius: var(--radius); padding: var(--s6); display: grid; gap: var(--s3); text-align: center; justify-items: center; }
 
 /* 1. Registre */
 .gens { display: flex; gap: var(--s2); overflow-x: auto; padding-bottom: var(--s1); scrollbar-width: thin; }
@@ -253,7 +308,6 @@ details.adv[open] > summary { margin-bottom: var(--s4); }
   .task .why { grid-column: 2; }
   .task .act { grid-column: 2; grid-row: auto; justify-self: start; }
 }
-.empty { background: var(--good-soft); border-radius: var(--radius); padding: var(--s6); display: grid; gap: var(--s2); text-align: center; justify-items: center; }
 .sw { width: 26px; height: 26px; border-radius: 50%; flex: none; border: 1px solid rgb(0 0 0 / .22); display: inline-block; }
 .sw.lg { width: 38px; height: 38px; }
 
@@ -321,10 +375,10 @@ textarea { width: 100%; min-height: 90px; font-family: var(--font-data); font-si
 
 .toast {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
-  background: var(--ink); color: var(--bg); border-radius: 999px; padding: 10px 12px 10px 20px; display: flex; gap: var(--s4); align-items: center;
-  box-shadow: 0 8px 24px rgb(0 0 0 / .3); z-index: 20; max-width: calc(100% - 32px);
+  background: var(--ink); color: var(--bg); border-radius: var(--radius); padding: 10px 12px 10px 18px; display: flex; gap: var(--s4); align-items: center;
+  box-shadow: 0 8px 24px rgb(0 0 0 / .3); z-index: 20; width: max-content; max-width: min(560px, calc(100% - 32px)); line-height: 1.35;
 }
-.toast button { background: none; border: 1px solid currentColor; color: inherit; border-radius: 999px; padding: 3px 14px; cursor: pointer; font-weight: 700; }
+.toast button { flex: none; background: none; border: 1px solid currentColor; color: inherit; border-radius: 999px; padding: 3px 14px; cursor: pointer; font-weight: 700; }
 footer { border-top: 1px solid var(--line); }
 footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-size: .86rem; display: grid; gap: var(--s1); }
 </style>
@@ -333,49 +387,39 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
 
 
 <header class="topbar gutter">
-  <div class="wrap">
+  <div class="wrap bar1">
     <span class="brand">Registre <span>Gén. 10</span></span>
     <nav class="seg" id="families" aria-label="Famille de montures"></nav>
   </div>
+  <div class="wrap"><nav class="tabs" id="tabs" aria-label="Sections"></nav></div>
 </header>
 
 <main class="gutter">
   <div class="wrap">
-    <section class="hero" id="hero" aria-live="polite"></section>
-    <nav class="howto" id="howto" aria-label="Étapes"></nav>
+    <section class="view" data-tab="routine" id="routine" aria-label="Ma routine"></section>
 
-    <section class="step" id="registre" aria-labelledby="h-registre">
-      <div class="step-head"><span class="k" aria-hidden="true">1</span><div>
-        <h2 id="h-registre">Coche ce que tu as déjà fait naître</h2>
-        <p>Reporte ici les montures validées dans l'interface des succès du jeu. Depuis la 3.7, une icône y signale celles qui manquent.</p></div></div>
+    <section class="view" data-tab="registre" id="registre" aria-labelledby="h-registre" hidden>
+      <div class="view-head"><h2 id="h-registre">Ton registre de naissances</h2>
+        <p>Coche les montures déjà validées dans l'interface des succès du jeu (depuis la 3.7, une icône y signale celles qui manquent). Ta routine et le plan se recalculent aussitôt.</p></div>
       <div class="card" id="progress"></div>
     </section>
 
-    <section class="step" id="conditions" aria-labelledby="h-conditions">
-      <div class="step-head"><span class="k" aria-hidden="true">2</span><div>
-        <h2 id="h-conditions">Règle tes conditions d'accouplement</h2>
-        <p>Le niveau des parents est le réglage qui change le plus la quantité de travail : chaque niveau ajoute des chances d'obtenir la nouvelle couleur.</p></div></div>
-      <div class="card" id="cond"></div>
+    <section class="view" data-tab="plan" id="plan" aria-labelledby="h-plan" hidden>
+      <div class="view-head"><h2 id="h-plan">Le plan complet</h2>
+        <p>Toutes les générations dans l'ordre, avec les quantités. Ta routine suit ce plan une génération à la fois. Tes chances de réussite, juste en dessous, changent toutes les quantités.</p></div>
+      <div class="card" id="conditions"></div>
+      <div class="stack" id="planBody"></div>
     </section>
 
-    <section class="step" id="plan" aria-labelledby="h-plan">
-      <div class="step-head"><span class="k" aria-hidden="true">3</span><div>
-        <h2 id="h-plan">Suis ton plan</h2>
-        <p>Fais les générations dans l'ordre. Quand un bébé naît, clique sur « Marquer comme née » : le plan se recalcule.</p></div></div>
-      <div class="step" id="planBody"></div>
+    <section class="view" data-tab="enclos" id="enclos" aria-labelledby="h-enclos" hidden>
+      <div class="view-head"><h2 id="h-enclos">Tes enclos</h2>
+        <p>Pour être féconde, une monture doit avoir 20 000 en endurance, en maturité et en amour. Les jauges qui montent dépendent de sa sérénité : règle ici tes enclos, la routine s'en sert pour estimer les durées.</p></div>
+      <div class="stack" id="pens"></div>
     </section>
 
-    <section class="step" id="enclos" aria-labelledby="h-enclos">
-      <div class="step-head"><span class="k" aria-hidden="true">4</span><div>
-        <h2 id="h-enclos">Prépare tes parents en enclos</h2>
-        <p>Pour être féconde, une monture doit avoir 20 000 en endurance, en maturité et en amour. Les jauges qui montent dépendent de sa sérénité : voici dans quel ordre activer les jauges d'enclos pour aller au plus vite.</p></div></div>
-      <div class="step" id="pens"></div>
-    </section>
-
-    <section class="step" id="aide" aria-labelledby="h-aide">
-      <div class="step-head"><span class="k" aria-hidden="true">?</span><div>
-        <h2 id="h-aide">Comprendre et aller plus vite</h2>
-        <p>Les règles depuis la refonte 3.5, les astuces pour économiser des accouplements, et la sauvegarde de ta progression.</p></div></div>
+    <section class="view" data-tab="aide" id="aide" aria-labelledby="h-aide" hidden>
+      <div class="view-head"><h2 id="h-aide">Comprendre et aller plus vite</h2>
+        <p>Les règles depuis la refonte 3.5, les astuces pour économiser des accouplements, et la sauvegarde de ta progression.</p></div>
       <div class="acc" id="memo"></div>
     </section>
   </div>
@@ -413,13 +457,19 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   const defaults = () => ({
     family: "dragodinde", level: 100, opti: false, optiVal: 20, takeza: false, clone: true,
     genMin: 2, genMax: 10, openGen: null, showStock: false,
-    pens: 3, rate: 20, zone: "neg", penCount: null,
+    pens: 3, rate: 20, zone: "neg", penCount: null, tab: "routine", onboarded: false,
     born: { dragodinde: {}, muldo: {}, volkorne: {} }, stock: { dragodinde: {}, muldo: {}, volkorne: {} },
+    // Curseur de la routine par famille : génération en cours et étapes cochées par génération.
+    routine: { dragodinde: { gen: null, done: {} }, muldo: { gen: null, done: {} }, volkorne: { gen: null, done: {} } },
   });
   let state = defaults();
   try {
     const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
-    if (saved) state = { ...state, ...saved, born: { ...state.born, ...saved.born }, stock: { ...state.stock, ...saved.stock } };
+    if (saved) {
+      state = { ...state, ...saved, born: { ...state.born, ...saved.born }, stock: { ...state.stock, ...saved.stock }, routine: { ...state.routine, ...saved.routine } };
+      // Sauvegardes d'avant la routine : un registre déjà rempli dispense de l'assistant.
+      if (saved.onboarded === undefined) state.onboarded = Object.values(state.born).some((b) => Object.keys(b).length);
+    }
   } catch (e) { /* stockage indisponible : valeurs par défaut */ }
   const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} };
 
@@ -499,36 +549,218 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     }).join("");
   }
 
-  /* ---------- Bandeau ---------- */
-  function renderHero(pl) {
-    const fam = state.family, f = FAMILIES[fam], t = famTotals(fam);
-    const pct = t.n / t.tot, C = 2 * Math.PI * 52;
-    const anyBorn = Object.keys(DATA).some((k) => Object.keys(state.born[k]).length);
-    const rows = Object.entries(pl.result).map(([id, r]) => ({ m: index[fam][id], r }));
-    let title, lead, actions;
-    if (!rows.length) {
-      title = t.n === t.tot ? `Tous les succès des ${f.label.toLowerCase()} sont bouclés` : `Rien à faire naître sur ces générations`;
-      lead = t.n === t.tot ? "Bravo. Passe à une autre famille dans la barre du haut." : `Tu vises les générations ${state.genMin} à ${state.genMax}, déjà complètes. Élargis la plage dans les réglages avancés de l'étape 2.`;
-      actions = `<a class="btn" href="#conditions">Voir les réglages</a>`;
-    } else if (!anyBorn) {
-      title = `Bienvenue, éleveur`;
-      lead = `Commence par cocher les ${f.label.toLowerCase()} que tu as déjà fait naître. Le site calcule ensuite, génération par génération, ce qu'il te reste à capturer et à accoupler.`;
-      actions = `<a class="btn primary" href="#registre">Cocher mes montures</a><a class="btn ghost" href="#plan">Voir le plan complet</a>`;
-    } else {
-      const g = Math.min(...rows.map((x) => x.m.gen));
-      const names = rows.filter((x) => x.m.gen === g).map((x) => x.m.name);
-      const shown = names.slice(0, 3).join(", ") + (names.length > 3 ? ` et ${names.length - 3} autre${names.length - 3 > 1 ? "s" : ""}` : "");
-      title = `Il te reste ${pl.newOnes} ${plural(pl.newOnes, "naissance")} pour les succès`;
-      lead = `Prochaine étape : la génération ${g}, avec ${esc(shown)}.`;
-      actions = `<a class="btn primary" href="#phase-${g}">Voir la prochaine étape</a><a class="btn ghost" href="#registre">Mettre à jour mon registre</a>`;
+  /* ---------- Onglets ---------- */
+  const TABS = [["routine", "Ma routine"], ["registre", "Registre"], ["plan", "Plan"], ["enclos", "Enclos"], ["aide", "Aide"]];
+  function renderTabs() {
+    const t = famTotals(state.family);
+    $("tabs").innerHTML = TABS.map(([k, l]) => `<button type="button" data-tab="${k}" ${state.tab === k ? 'aria-current="page"' : ""}>${l}${k === "registre" ? ` <span class="num">${t.n}/${t.tot}</span>` : ""}</button>`).join("");
+    document.querySelectorAll(".view").forEach((v) => { v.hidden = v.dataset.tab !== state.tab; });
+  }
+  function setTab(tab, toTop = true) {
+    state.tab = tab; save(); renderTabs();
+    if (toTop) window.scrollTo({ top: 0 });
+  }
+
+  /* ---------- Ma routine ---------- */
+  // Une génération à la fois, en 5 étapes qui suivent la boucle du jeu. Les étapes 2 à 5 se répètent par vagues.
+  const STEPS = [
+    ["parents", "Réunis les parents", "J'ai mes parents"],
+    ["enclos", "Rends-les féconds en enclos", "Ils sont féconds"],
+    ["accouple", "Accouple-les à l'étable", "Accouplements faits"],
+    ["naissances", "Note les naissances", "Naissances notées"],
+    ["clone", "Clone les stériles et recommence", "Génération terminée"],
+  ];
+  let peek = null; // étape ouverte à la main : { gen, key } (key null = tout replier)
+  let wizUpTo = 1;
+  const routineOf = (fam) => state.routine[fam] || (state.routine[fam] = { gen: null, done: {} });
+  const planGens = (fam, pl) => [...new Set(Object.keys(pl.result).map((id) => index[fam][id].gen))].sort((a, b) => a - b);
+  function currentGen(fam, gens) {
+    if (!gens.length) return null;
+    const want = routineOf(fam).gen;
+    if (want == null) return gens[0];
+    const g = gens.find((x) => x >= want);
+    return g != null ? g : gens[gens.length - 1];
+  }
+  // Ce que demande une génération du plan : croisements arrondis, parents par monture, nouveaux succès.
+  function phaseInfo(fam, pl, g) {
+    const rows = Object.entries(pl.result).map(([id, r]) => ({ m: index[fam][id], r })).filter((x) => x.m.gen === g)
+      .sort((a, b) => a.m.name.localeCompare(b.m.name, "fr"));
+    const crosses = [], parents = {};
+    for (const { m, r } of rows) m.recipes.forEach(([a, b], i) => {
+      if (r.alloc[i] <= 1e-9) return;
+      const n = Math.ceil(r.alloc[i] - 1e-9);
+      crosses.push({ m, a: index[fam][a], b: index[fam][b], n });
+      parents[a] = (parents[a] || 0) + n; parents[b] = (parents[b] || 0) + n;
+    });
+    return {
+      rows, crosses, parents, breed: crosses.reduce((s, c) => s + c.n, 0),
+      births: rows.reduce((s, x) => s + x.r.births, 0), fresh: rows.filter((x) => !state.born[fam][x.m.id]).map((x) => x.m),
+    };
+  }
+
+  function wizardHtml() {
+    const levels = [[1, "Juste capturés"], [60, "60"], [100, "100"], [150, "150"], [200, "200 (max)"]];
+    return `<div class="card wiz">
+      <div class="view-head"><span class="eyebrow">Bienvenue, éleveur</span><h1>Ta routine d'élevage en 3 questions</h1>
+        <p class="lead">Le site te dira ensuite quoi faire, étape par étape : quoi capturer, quoi mettre en enclos, quoi accoupler, jusqu'aux succès de génération 10.</p></div>
+      <div class="q"><b><span class="qn">1</span>Quelle famille veux-tu faire ?</b>
+        <div class="presets lg">${Object.entries(FAMILIES).map(([k, f]) => `<button type="button" data-fam="${k}" aria-pressed="${state.family === k}">${f.label}</button>`).join("")}</div></div>
+      <div class="q"><label for="wizUpTo"><b style="display:flex;gap:12px;align-items:center;font-size:1.08rem"><span class="qn">2</span>Où en es-tu ?</b></label>
+        <select id="wizUpTo"><option value="1">Je débute : rien n'est encore né</option>${[2, 3, 4, 5, 6, 7, 8, 9].map((g) => `<option value="${g}" ${wizUpTo === g ? "selected" : ""}>J'ai fait naître toutes les générations jusqu'à la ${g}</option>`).join("")}</select>
+        <span class="note">Tu pourras corriger monture par monture dans le registre.</span></div>
+      <div class="q"><b><span class="qn">3</span>Quel niveau auront tes parents ?</b>
+        <div class="presets lg">${levels.map(([v, l]) => `<button type="button" data-level="${v}" aria-pressed="${state.level === v}">${l}</button>`).join("")}</div>
+        <span class="note">Plus ils sont hauts, moins il faut d'accouplements (${fmt1.format(odds().p * 100)} % de réussite avec ce choix). Dans le doute, garde 100.</span></div>
+      <div class="row"><button type="button" class="btn primary" data-act="wiz-done">Afficher ma routine</button>
+        <button type="button" class="btn ghost" data-act="wiz-skip">Je préfère cocher moi-même</button></div>
+    </div>`;
+  }
+
+  function stepSummary(key, fam, info, pl) {
+    const reuse = state.clone ? 0.5 : 1;
+    switch (key) {
+      case "parents": {
+        const ids = Object.keys(info.parents), n = ids.reduce((s, id) => s + Math.max(1, Math.ceil(info.parents[id] * reuse - 1e-9)), 0);
+        const wild = ids.filter((id) => index[fam][id].gen === 1).length;
+        return `${n} ${plural(n, "parent")} de départ${wild ? ", à capturer" : ""}`;
+      }
+      case "enclos": { const c = penCalc(info.breed * 2); return `${info.breed * 2} montures · ${c.waves} ${plural(c.waves, "vague")} de ≈ ${hours(c.waveSec)}`; }
+      case "accouple": return `≈ ${info.breed} ${plural(info.breed, "accouplement")} à ${fmt1.format(pl.p * 100)} % de réussite`;
+      case "naissances": return info.fresh.length ? `${info.fresh.length} ${plural(info.fresh.length, "nouveau succès", "nouveaux succès")} à valider` : "Pas de nouveau succès : bébés à garder comme parents";
+      case "clone": return state.clone ? "Les stériles redeviennent des parents" : "Recommence avec de nouveaux parents";
     }
-    $("hero").innerHTML = `<div class="txt"><span class="eyebrow">${f.label} · Dofus 3.7</span><h1>${title}</h1><p class="lead">${lead}</p><div class="actions">${actions}</div></div>
-      <div class="ring ${pct >= 1 ? "full" : ""}" role="img" aria-label="${t.n} montures nées sur ${t.tot}">
+  }
+
+  function stepBody(key, fam, g, info, pl) {
+    const f = FAMILIES[fam], reuse = state.clone ? 0.5 : 1;
+    if (key === "parents") {
+      const par = Object.entries(info.parents).map(([id, n]) => ({ m: index[fam][id], n: Math.max(1, Math.ceil(n * reuse - 1e-9)), st: Number(state.stock[fam][id]) || 0 }))
+        .sort((a, b) => a.m.gen - b.m.gen || a.m.name.localeCompare(b.m.name, "fr"));
+      const chip = (x) => `<span class="chip">${swatch(x.m)}${esc(x.m.name)} <span class="num">× ${x.n}</span>${x.st ? ` <span class="small muted">(${x.st} en réserve)</span>` : ""}</span>`;
+      const wild = par.filter((x) => x.m.gen === 1), bred = par.filter((x) => x.m.gen > 1);
+      return `${wild.length ? `<div class="sub"><b>À capturer</b><div class="chips">${wild.map(chip).join("")}</div>
+          <p class="note">${f.where} Équipe un filet (métier Éleveur) pour obtenir le sort de capture ; les filets multiplicateurs capturent plusieurs montures par combat.</p></div>` : ""}
+        ${bred.length ? `<div class="sub"><b>À sortir de ton étable</b><div class="chips">${bred.map(chip).join("")}</div>
+          <p class="note">Ce sont les bébés des générations précédentes de ta routine.</p></div>` : ""}
+        <p>Prends autant de mâles que de femelles : chaque accouplement demande un mâle et une femelle.${state.clone ? " Ces quantités ne couvrent que le départ : le clonage des stériles (étape 5) fournit l'autre moitié des parents." : ""}</p>`;
+    }
+    if (key === "enclos") {
+      const count = info.breed * 2, c = penCalc(count);
+      return `<div class="mini"><span><b class="num">${count}</b> montures à rendre fécondes, clones compris</span>
+          <span><b class="num">${c.waves}</b> ${plural(c.waves, "vague")} de ${10 * c.pens} places</span><span><b class="num">≈ ${hours(c.waveSec)}</b> par vague</span></div>
+        <p>Il faut 20 000 en endurance, maturité et amour. L'ordre des jauges dépend de la sérénité de tes montures : regarde-la dans l'étable et choisis son groupe.</p>
+        ${zoneButtons()}${zoneSteps(c)}
+        <p class="note">Remplis tes enclos à 10 et ne mélange pas les sérénités. Durées calculées pour ${c.pens} ${plural(c.pens, "enclos", "enclos")} au ${c.tier.toLowerCase()}. <a href="#enclos">Régler mes enclos</a></p>`;
+    }
+    if (key === "accouple") {
+      const tips = [];
+      if (g >= 8 && pl.p < 0.9) tips.push("Pour les générations 8 à 10, monte d'abord tes parents (jauge d'expérience) : au niveau 200 avec une Optimakina, chaque accouplement réussit.");
+      if (g >= 9 && !state.takeza) tips.push("Garde si possible ces accouplements pour le jour de Takeza : +20 % de chances.");
+      return `<div class="odds"><span class="big num">${fmt1.format(pl.p * 100)} %</span><span>de chances d'obtenir la nouvelle couleur à chaque accouplement.<br><a href="#conditions">Modifier mes conditions</a></span></div>
+        <div class="cross-list">${info.crosses.map((c) => `<div class="cross"><span class="pair">${swatch(c.a)}${esc(c.a.name)} <span class="x">×</span> ${swatch(c.b)}${esc(c.b.name)}</span>
+          <span class="cnt">× ${c.n}</span><span class="note" style="grid-column:1/-1">pour obtenir ${esc(c.m.name)}</span></div>`).join("")}</div>
+        <p class="note">À l'étable, choisis un mâle et une femelle féconds : le bébé naît tout de suite et les deux parents deviennent stériles. Fais-les par vagues, au rythme des enclos.</p>
+        ${tips.map((t) => `<div class="tip"><span class="ic">!</span><p>${t}</p></div>`).join("")}`;
+    }
+    if (key === "naissances") {
+      const extra = Math.max(0, Math.ceil(info.births - 1e-9) - info.fresh.length);
+      if (!info.fresh.length) return `<p>Aucun nouveau succès dans cette génération : ses bébés servent de parents pour la suite. Garde-les tous (≈ ${up(info.births)}).</p>`;
+      return `<p>Clique dès qu'une nouvelle monture naît : le succès est validé et la routine se recalcule.</p>
+        <div class="cross-list">${info.fresh.map((m) => `<div class="cross"><span class="nm">${swatch(m)}${esc(m.name)}</span>
+          <button type="button" class="mark" data-born="${m.id}"><span class="cb" aria-hidden="true"></span>Marquer comme née</button></div>`).join("")}</div>
+        <p class="note">${extra ? `Garde aussi ≈ ${extra} ${plural(extra, "bébé")} de plus : ${plural(extra, "il servira", "ils serviront")} de parents à la génération suivante. ` : ""}Les bébés ratés reprennent une couleur de leurs parents : garde-les comme parents de rechange ou pour le clonage.</p>`;
+    }
+    return state.clone
+      ? `<p>Après chaque vague d'accouplements, tes parents sont stériles. Clone-les deux par deux (même génération et même type) : les deux disparaissent et tu récupères l'une des deux, fertile mais avec les jauges à zéro.</p>
+        <p>Remets les clones en enclos (étape 2) et relance des accouplements (étape 3), jusqu'à atteindre ≈ ${info.breed} ${plural(info.breed, "accouplement")} pour cette génération.</p>
+        <p class="note">La monture récupérée garde son genre, sa généalogie et sa sérénité (pas besoin de refaire le tri des enclos), mais perd sa capacité spéciale.</p>`
+      : `<p>Relance des vagues d'enclos et d'accouplements avec de nouveaux parents, jusqu'à atteindre ≈ ${info.breed} ${plural(info.breed, "accouplement")} pour cette génération.</p>
+        <p class="note">Tu as désactivé le recyclage par clonage. Deux stériles de même génération donnent une monture fertile : environ deux fois moins de parents à produire. <a href="#conditions">Le réactiver</a></p>`;
+  }
+
+  // Objectif de la routine : la première génération visée qui a encore des montures à faire naître (ou celle choisie
+  // dans le parcours). La routine ne planifie que le sous-arbre de cet objectif, pour garder des quantités à taille humaine.
+  function routineCtx(fam) {
+    const r = routineOf(fam);
+    const open = (x) => x >= state.genMin && x <= state.genMax && bornCount(fam, x) < genList(fam, x).length;
+    let T = r.pick != null && open(r.pick) ? r.pick : null;
+    for (let x = state.genMin; T == null && x <= state.genMax; x++) if (open(x)) T = x;
+    if (T == null) return { T: null };
+    if (r.target !== T) { r.target = T; r.gen = null; r.done = {}; save(); }
+    const sp = plan(fam, { ...state, genMin: T, genMax: T });
+    const gens = planGens(fam, sp), g = currentGen(fam, gens);
+    return { T, sp, gens, g, info: phaseInfo(fam, sp, g) };
+  }
+
+  function renderRoutine(pl, ctx) {
+    const fam = state.family, f = FAMILIES[fam], t = famTotals(fam), el = $("routine");
+    if (!state.onboarded) { el.innerHTML = wizardHtml(); return; }
+    const { T, sp, gens, g, info } = ctx;
+    const pct = t.n / t.tot, C = 2 * Math.PI * 52;
+    const ring = `<div class="ring ${pct >= 1 ? "full" : ""}" role="img" aria-label="${t.n} montures nées sur ${t.tot}">
         <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="12"></circle>
         <circle class="val" cx="60" cy="60" r="52" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct)}"></circle></svg>
         <div class="lbl"><b>${Math.round(pct * 100)} %</b><span class="num">${t.n} / ${t.tot} nées</span></div></div>`;
-    const steps = [["registre", "Coche ce qui est né", anyBorn], ["conditions", "Règle tes conditions", false], ["plan", "Suis le plan", false], ["enclos", "Prépare tes enclos", false]];
-    $("howto").innerHTML = steps.map(([id, l, d], i) => `<a href="#${id}" class="${d ? "done" : ""}"><span class="k">${d ? "✓" : i + 1}</span><span>${l}</span></a>`).join("");
+    const road = `<div class="road-wrap"><span class="eyebrow">Tous tes succès · touche une génération pour en faire ton objectif</span><div class="road">${[2, 3, 4, 5, 6, 7, 8, 9, 10].map((x) => {
+        const tot = genList(fam, x).length, n = bornCount(fam, x), full = n === tot, cls = x === T ? "now" : full ? "done" : "";
+        const off = full || x < state.genMin || x > state.genMax;
+        return `<button type="button" class="${cls}" data-rgen="${x}" ${off ? "disabled" : ""} ${x === T ? 'aria-current="step"' : ""} aria-label="Génération ${x} : ${n} sur ${tot} nées">
+          <span>${full ? "✓" : x}</span><span class="bar"><i style="width:${(n / tot) * 100}%"></i></span></button>`;
+      }).join("")}</div></div>`;
+
+    if (T == null) {
+      const all = t.n === t.tot;
+      el.innerHTML = `<div class="card rt-head"><div class="txt"><span class="eyebrow">Ta routine · ${f.label}</span>
+          <h1>${all ? "Tous les succès sont bouclés" : "Rien à faire naître sur ces générations"}</h1>
+          <p class="lead">${all ? "Bravo, éleveur. Choisis une autre famille dans la barre du haut." : `Tu vises les générations ${state.genMin} à ${state.genMax}, déjà complètes. Élargis la plage dans les réglages avancés.`}</p>
+          ${all ? "" : `<div class="row"><a class="btn" href="#conditions">Voir les réglages</a></div>`}</div>${ring}${road}</div>`;
+      return;
+    }
+
+    const goal = genList(fam, T).filter((m) => !state.born[fam][m.id]);
+    const done = routineOf(fam).done[g] || {};
+    const isDone = (k) => !!done[k] || (k === "naissances" && !info.fresh.length && !!done.accouple);
+    const cur = STEPS.findIndex(([k]) => !isDone(k));
+    const open = peek && peek.gen === g ? peek.key : cur >= 0 ? STEPS[cur][0] : null;
+    const gi = gens.indexOf(g), next = gens[gi + 1];
+    const names = goal.slice(0, 3).map((m) => esc(m.name)).join(", ") + (goal.length > 3 ? ` et ${goal.length - 3} autre${goal.length > 4 ? "s" : ""}` : "");
+
+    const path = `<ol class="path" aria-label="Chemin vers l'objectif">${gens.map((x, i) => `<li class="${i < gi ? "done" : i === gi ? "now" : ""}">
+        <b>${i < gi ? "✓ " : ""}Gén. ${x}</b><small>${x === T ? "les succès" : "des parents"}</small></li>`).join("")}</ol>`;
+    const head = `<div class="card rt-head"><div class="txt"><span class="eyebrow">Ta routine · ${f.label}</span>
+        <h1>Objectif : génération ${T}</h1>
+        <p class="lead">${goal.length} ${plural(goal.length, "monture")} à faire naître pour les succès : ${names}.</p>
+        ${gens.length > 1 ? `<p class="note">Pour y arriver, produis d'abord les parents des générations précédentes, dans cet ordre :</p>${path}` : ""}
+      </div>${ring}${road}</div>`;
+
+    const now = `<div class="now-bar"><div><span class="eyebrow">Maintenant</span>
+        <h2>Génération ${g}${g === T ? "" : " · des parents"}</h2></div>
+        <div class="now-right"><span>${cur >= 0 ? `Étape ${cur + 1} sur ${STEPS.length}` : "Étapes faites"}</span>
+        <span class="prog" aria-hidden="true">${STEPS.map(([k], i) => `<i class="${isDone(k) ? "on" : i === cur ? "cur" : ""}"></i>`).join("")}</span></div></div>`;
+
+    const steps = `<ol class="steps">${STEPS.map(([k, label, ok], i) => {
+        const d = isDone(k), isOpen = open === k, cls = d ? "done" : i === cur ? "now" : "";
+        const okLabel = k === "naissances" && info.fresh.length ? "Continuer, il en manque encore" : ok;
+        return `<li class="st ${cls}">
+          <button type="button" class="st-h" data-stp="${k}" data-gen="${g}" aria-expanded="${isOpen}">
+            <span class="n" aria-hidden="true">${d ? "✓" : i + 1}</span>
+            <span><b>${label}</b><small>${stepSummary(k, fam, info, sp)}</small></span>
+            <span class="chev" aria-hidden="true">${isOpen ? "▾" : "▸"}</span></button>
+          ${isOpen ? `<div class="st-b">${stepBody(k, fam, g, info, sp)}
+            <div class="st-act">${d
+              ? (done[k] ? `<button type="button" class="btn sm ghost" data-act="step-undo" data-key="${k}" data-gen="${g}">Marquer comme à refaire</button>` : "")
+              : `<button type="button" class="btn ${k === "naissances" && info.fresh.length ? "" : "primary"}" data-act="step-done" data-key="${k}" data-gen="${g}">${okLabel}</button>`}</div></div>` : ""}
+        </li>`;
+      }).join("")}</ol>`;
+
+    let end = `<p class="note">Les étapes 2 à 5 se répètent par vagues tant qu'il reste des accouplements. Pour tout le chemin jusqu'à la génération 10 : il te reste ${pl.newOnes} ${plural(pl.newOnes, "naissance")}, soit ≈ ${up(pl.totalBreed)} accouplements. <a href="#plan">Voir le plan complet</a></p>`;
+    if (cur < 0) end = next
+      ? `<div class="empty"><h2>Génération ${g} prête</h2><p>Tu as les parents qu'il faut. Prochaine étape du chemin : la génération ${next}${next === T ? ", celle des succès" : ""}.</p>
+          <button type="button" class="btn primary" data-act="next-gen" data-gen="${next}">Passer à la génération ${next}</button></div>`
+      : `<div class="empty"><h2>Il manque encore ${info.fresh.length} ${plural(info.fresh.length, "monture")}</h2><p>Pas de chance sur cette vague. Relance des accouplements avec tes clones et tes bébés ratés, puis note les naissances.</p>
+          <button type="button" class="btn primary" data-act="new-wave" data-gen="${g}">Relancer une vague</button></div>`;
+
+    el.innerHTML = head + now + steps + end;
   }
 
   /* ---------- 1. Registre ---------- */
@@ -572,7 +804,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
 
   /* ---------- 2. Conditions ---------- */
   function renderConditions() {
-    $("cond").innerHTML = `
+    $("conditions").innerHTML = `
+      <h3>Tes chances de réussite</h3>
       <div class="gauge" id="gauge"></div>
       <div class="field">
         <label for="level">Niveau moyen de tes parents : <span class="num" id="levelOut">${state.level}</span></label>
@@ -637,7 +870,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     </div>`;
   }
 
-  function renderPlan(pl) {
+  function renderPlan(pl, ctx) {
     const fam = state.family, f = FAMILIES[fam];
     const el = $("planBody");
     const rows = Object.entries(pl.result).map(([id, r]) => ({ m: index[fam][id], r }));
@@ -659,17 +892,17 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         <div class="chips">${pl.captures.map((c) => `<span class="chip">${swatch(c.m)}${esc(c.m.name)} <span class="num">× ${Math.ceil(c.n - 1e-9)}</span></span>`).join("")}</div>
         <p class="small muted">${f.where} Équipe un filet (métier Éleveur) pour obtenir le sort de capture ; les filets multiplicateurs capturent plusieurs montures par combat.</p></div>`;
     }
-    const gens = [...new Set(rows.map((x) => x.m.gen))].sort((a, b) => a - b);
-    html += `<div class="timeline">${gens.map((g, gi) => {
+    const gens = planGens(fam, pl), cur = ctx.g;
+    html += `<div class="timeline">${gens.map((g) => {
       const list = rows.filter((x) => x.m.gen === g).sort((a, b) => a.m.name.localeCompare(b.m.name, "fr"));
       const breed = list.reduce((s, x) => s + x.r.breedings, 0);
       const fresh = list.filter((x) => !state.born[fam][x.m.id]).length;
       const meta = `<span class="small muted">≈ ${up(breed)} accouplements${fresh ? ` · ${fresh} ${plural(fresh, "nouveau succès", "nouveaux succès")}` : ""}</span>`;
       const tasks = `<div class="tasks">${list.map(({ m, r }) => taskHtml(fam, m, r)).join("")}</div>`;
-      if (gi === 0) {
+      if (g === cur) {
         return `<div class="phase now" id="phase-${g}"><span class="dot">${g}</span><div class="phase-body">
-          <header><h3><span class="badge">À faire maintenant</span>Génération ${g}</h3>${meta}</header>
-          <p class="intro">Rends les parents féconds en enclos (<a href="#enclos">routine à l'étape 4</a>), puis accouple un mâle et une femelle depuis l'étable.</p>
+          <header><h3><span class="badge">En cours</span>Génération ${g}</h3>${meta}</header>
+          <p class="intro">Ta routine travaille sur cette génération en ce moment, pour ton objectif de génération ${ctx.T}. Les quantités ci-dessous couvrent tout le chemin jusqu'à la génération ${state.genMax}. <a href="#routine">Ouvrir ma routine</a></p>
           ${tasks}</div></div>`;
       }
       return `<div class="phase" id="phase-${g}"><span class="dot">${g}</span><details class="phase-body"><summary><h3>Génération ${g}</h3>${meta}</summary>${tasks}</details></div>`;
@@ -715,19 +948,25 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   };
   const jg = (k) => `<span class="jg"><i class="${JAUGES[k][1]}"></i>${JAUGES[k][0]}</span>`;
   const pct = (v) => ((v + 5000) / 100);
-
-  function renderPens(pl) {
-    const fam = state.family;
-    const rate = Number(state.rate), pens = Number(state.pens);
-    const zone = ZONES[state.zone] || ZONES.neg;
-    const rows = Object.values(pl.result);
-    const firstGen = Object.keys(pl.result).length ? Math.min(...Object.keys(pl.result).map((id) => index[fam][id].gen)) : null;
-    const nextBreed = firstGen ? Object.entries(pl.result).filter(([id]) => index[fam][id].gen === firstGen).reduce((s, [, r]) => s + r.breedings, 0) : 0;
-    const autoCount = Math.ceil(nextBreed * 2 - 1e-9);
-    const count = state.penCount != null ? state.penCount : autoCount;
+  function penCalc(count) {
+    const rate = Number(state.rate), pens = Number(state.pens), zone = ZONES[state.zone] || ZONES.neg;
     const phaseSec = zone.phases.map((ph) => (ph.pts / rate) * 10);
-    const waveSec = phaseSec.reduce((a, b) => a + b, 0);
-    const waves = Math.max(1, Math.ceil(count / (10 * pens)));
+    return {
+      rate, pens, zone, phaseSec, tier: RATES.find((r) => r[0] === rate)[2],
+      waveSec: phaseSec.reduce((a, b) => a + b, 0), waves: Math.max(1, Math.ceil(count / (10 * pens))),
+    };
+  }
+  const zoneButtons = () => `<div class="zones" role="group" aria-label="Sérénité de départ">${Object.entries(ZONES).map(([k, z]) =>
+    `<button type="button" data-zone="${k}" aria-pressed="${state.zone === k}"><b>${z.label}</b><span>${z.range}</span></button>`).join("")}</div>`;
+  const zoneSteps = (c) => `<ol class="routine">${c.zone.phases.map((ph, i) => `<li>
+    <div class="what"><span class="jauges"><span class="small muted">Active</span>${ph.j.map(jg).join('<span class="muted">+</span>')}</span><span>${ph.goal}</span></div>
+    <span class="dur">≈ ${hours(c.phaseSec[i])}<small>${fmt0.format(ph.pts)} pts</small></span></li>`).join("")}</ol>`;
+
+  function renderPens(ctx) {
+    const firstGen = ctx.T != null ? ctx.g : null;
+    const autoCount = firstGen ? ctx.info.breed * 2 : 20;
+    const count = state.penCount != null ? state.penCount : autoCount;
+    const c = penCalc(count), { rate, pens, zone, phaseSec, waveSec, waves } = c;
     const fuel = zone.phases.reduce((s, ph) => s + ph.pts * ph.j.filter((k) => k !== "xp").length, 0);
     const xpFuel = zone.phases.reduce((s, ph) => s + (ph.j.includes("xp") ? ph.pts : 0), 0);
     const axis = [-5000, -2000, 0, 2000, 5000];
@@ -744,7 +983,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
           <div class="field"><label for="penCount">Montures à rendre fécondes</label>
             <span class="row"><input type="number" id="penCount" min="1" step="1" value="${count}">
             ${state.penCount != null ? `<button type="button" class="btn sm ghost" data-act="pen-auto">Revenir au calcul auto</button>` : ""}</span>
-            <small>${firstGen ? `Calculé pour la prochaine étape du plan (génération ${firstGen}) : 2 parents par accouplement.` : "Aucune étape restante dans le plan : saisis un nombre."}</small></div>
+            <small>${firstGen ? `Calculé pour la génération en cours de ta routine (génération ${firstGen}) : 2 parents par accouplement, clones compris.` : "Aucune étape restante dans le plan : saisis un nombre."}</small></div>
         </div>
       </div>
       <div class="pen-stats">
@@ -761,12 +1000,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
           <div class="ln"><span>Amour</span><span class="tr">${hl}<i class="g-amo" style="left:${pct(0)}%;width:${100 - pct(0)}%"></i></span></div>
           <div class="axis"><span></span><div>${axis.map((v) => `<span style="left:${pct(v)}%">${v > 0 ? "+" : ""}${fmt0.format(v)}</span>`).join("")}</div></div>
         </div>
-        <div class="zones" role="group" aria-label="Sérénité de départ">${Object.entries(ZONES).map(([k, z]) =>
-          `<button type="button" data-zone="${k}" aria-pressed="${state.zone === k}"><b>${z.label}</b><span>${z.range}</span></button>`).join("")}</div>
-        <ol class="routine">${zone.phases.map((ph, i) => `<li>
-          <div class="what"><span class="jauges"><span class="small muted">Active</span>${ph.j.map(jg).join('<span class="muted">+</span>')}</span><span>${ph.goal}</span></div>
-          <span class="dur">≈ ${hours(phaseSec[i])}<small>${fmt0.format(ph.pts)} pts</small></span></li>`).join("")}</ol>
-        <p class="small muted">Durées pour une jauge d'enclos au ${RATES.find((r) => r[0] === rate)[2].toLowerCase()} (${rate} points toutes les 10 secondes). Carburant d'une vague par enclos : ≈ ${fmt0.format(fuel)} points de jauges utiles, plus ${fmt0.format(xpFuel)} d'expérience si tu actives la jauge d'XP (facultative, mais elle monte le niveau donc les chances de réussite).</p>
+        ${zoneButtons()}${zoneSteps(c)}
+        <p class="small muted">Durées pour une jauge d'enclos au ${c.tier.toLowerCase()} (${rate} points toutes les 10 secondes). Carburant d'une vague par enclos : ≈ ${fmt0.format(fuel)} points de jauges utiles, plus ${fmt0.format(xpFuel)} d'expérience si tu actives la jauge d'XP (facultative, mais elle monte le niveau donc les chances de réussite).</p>
       </div>
       <div class="tip"><span class="ic">!</span><div style="display:grid;gap:8px">
         <p><b>Remplis toujours tes enclos à 10.</b> Une jauge d'enclos se vide à la même vitesse avec 1 ou 10 montures : un enclos plein coûte 10 fois moins de carburant par monture.</p>
@@ -799,7 +1034,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       <details><summary>8 astuces pour aller plus vite</summary><div class="in"><ol class="tips">
         <li><span><b>Monte les parents avant les croisements chers.</b> Deux parents niveau 100 donnent 60 %, niveau 200 donnent 90 %, et 100 % avec une Optimakina.</span></li>
         <li><span><b>Varie les recettes des couleurs pures.</b> Muldos et Volkornes ont plusieurs croisements par couleur pure : varier les bicolores fait naître des montures différentes, et chaque naissance coche un succès. Le plan le fait pour toi.</span></li>
-        <li><span><b>Ne jette pas les stériles.</b> Le clonage conserve genre, généalogie et sérénité ; seules les jauges repartent à zéro.</span></li>
+        <li><span><b>Ne jette pas les stériles.</b> Deux stériles de même génération donnent une monture fertile, à remettre en enclos pour la rendre féconde. Elle garde genre, généalogie et sérénité, mais ses jauges repartent à zéro et elle perd sa capacité spéciale.</span></li>
         <li><span><b>Garde les bébés ratés.</b> Ils reprennent une couleur de l'arbre : parent de rechange ou moitié de clone.</span></li>
         <li><span><b>Équilibre les sexes.</b> Sur les couleurs rares, l'Animakina choisit le sexe du bébé.</span></li>
         <li><span><b>Garde les générations 9 et 10 pour Takeza.</b> +20 % de chances ce jour-là.</span></li>
@@ -838,6 +1073,10 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         </details>
         <span class="small muted" id="saveMsg" role="status"></span>
       </div></details>
+      <details><summary>Recommencer l'assistant de démarrage</summary><div class="in">
+        <p class="small muted">Repose les 3 questions du début (famille, où tu en es, niveau des parents). Ton registre est conservé.</p>
+        <div class="row"><button type="button" class="btn sm" data-act="wiz-open">Relancer l'assistant</button></div>
+      </div></details>
       <details><summary>Sources</summary><div class="in"><ul>
         <li><a href="https://www.dofuspourlesnoobs.com/guide-de-l-eleveur.html" target="_blank" rel="noopener">Guide de l'éleveur, édition 2026</a></li>
         <li><a href="https://www.dofuspourlesnoobs.com/mise-a-jour-305.html" target="_blank" rel="noopener">Présentation de la mise à jour 3.5</a></li>
@@ -845,15 +1084,24 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       </ul></div></details>`;
     refreshSaveCode();
   }
-  const refreshSaveCode = () => { const c = $("saveCode"); if (c) c.value = JSON.stringify({ born: state.born, stock: state.stock }); };
+  const refreshSaveCode = () => { const c = $("saveCode"); if (c) c.value = JSON.stringify({ born: state.born, stock: state.stock, routine: state.routine }); };
 
   /* ---------- Rendu et événements ---------- */
   function render() {
     const pl = plan(state.family);
-    renderFamilies(); renderHero(pl); renderProgress(); renderConditions(); renderPlan(pl); renderPens(pl); refreshSaveCode();
+    const ctx = routineCtx(state.family);
+    renderFamilies(); renderTabs(); renderRoutine(pl, ctx); renderProgress(); renderConditions(); renderPlan(pl, ctx); renderPens(ctx); refreshSaveCode();
   }
   const update = () => { save(); render(); };
-  const softUpdate = () => { save(); const pl = plan(state.family); renderFamilies(); renderHero(pl); renderPlan(pl); renderPens(pl); refreshSaveCode(); };
+  // Ne redessine pas le registre ni les conditions : garde le focus sur le curseur de niveau et les champs de réserve.
+  const softUpdate = () => {
+    save(); const pl = plan(state.family), ctx = routineCtx(state.family);
+    renderFamilies(); renderTabs(); renderRoutine(pl, ctx); renderPlan(pl, ctx); renderPens(ctx); refreshSaveCode();
+  };
+  const focusCurrentStep = () => requestAnimationFrame(() => {
+    const st = document.querySelector(".st.now") || document.querySelector("#routine .empty");
+    if (st) { st.scrollIntoView({ block: "nearest" }); const h = st.querySelector(".st-h, .btn"); if (h) h.focus({ preventScroll: true }); }
+  });
 
   let toastTimer = null, undo = null;
   function toast(msg, undoFn) {
@@ -868,19 +1116,49 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   function applyImport(v) {
     if (!v || typeof v.born !== "object" || typeof v.stock !== "object") throw new Error("format");
     state.born = { ...defaults().born, ...v.born }; state.stock = { ...defaults().stock, ...v.stock };
+    if (v.routine && typeof v.routine === "object") state.routine = { ...defaults().routine, ...v.routine };
+    state.onboarded = true;
     update(); $("saveMsg").textContent = "Progression importée."; toast("Progression importée.");
   }
 
   document.addEventListener("click", (e) => {
+    // Les liens internes ouvrent l'onglet qui contient leur cible.
+    const link = e.target.closest('a[href^="#"]');
+    if (link) {
+      const target = $(link.getAttribute("href").slice(1)), view = target && target.closest(".view");
+      if (!view) return;
+      e.preventDefault();
+      if (view.dataset.tab !== state.tab) setTab(view.dataset.tab, false);
+      const det = target.matches("details") ? target : target.matches(".phase") ? target.querySelector("details") : null;
+      if (det) det.open = true;
+      requestAnimationFrame(() => (target === view ? window.scrollTo({ top: 0 }) : target.scrollIntoView()));
+      return;
+    }
+    const tabBtn = e.target.closest("[data-tab]:not(.view)");
+    if (tabBtn) return setTab(tabBtn.dataset.tab);
+    const stp = e.target.closest("[data-stp]");
+    if (stp) {
+      const g = Number(stp.dataset.gen), k = stp.dataset.stp;
+      peek = { gen: g, key: stp.getAttribute("aria-expanded") === "true" ? null : k };
+      renderRoutine(plan(state.family), routineCtx(state.family));
+      const again = document.querySelector(`[data-stp="${k}"]`); if (again) again.focus({ preventScroll: true });
+      return;
+    }
+    const rgen = e.target.closest("[data-rgen]");
+    if (rgen) { routineOf(state.family).pick = Number(rgen.dataset.rgen); peek = null; return update(); }
     const famBtn = e.target.closest("[data-fam]");
     if (famBtn) { state.family = famBtn.dataset.fam; state.openGen = firstOpenGen(state.family); return update(); }
     const bornBtn = e.target.closest("[data-born]");
     if (bornBtn) {
       const fam = state.family, id = bornBtn.dataset.born, m = index[fam][id];
-      const fromPlan = !!bornBtn.closest("#planBody");
+      const fromPlan = !!bornBtn.closest("#planBody, #routine");
+      const before = routineOf(fam).target;
       if (state.born[fam][id]) delete state.born[fam][id]; else state.born[fam][id] = true;
       update();
-      if (fromPlan) toast(`${m.name} : naissance enregistrée.`, () => { delete state.born[fam][id]; update(); });
+      const after = routineOf(fam).target, bumped = state.born[fam][id] && before != null && after !== before;
+      if (bumped) window.scrollTo({ top: 0 });
+      if (fromPlan || bumped) toast(bumped ? `Génération ${before} bouclée !${after != null ? ` Nouvel objectif : génération ${after}.` : ""}` : `${m.name} : naissance enregistrée.`,
+        () => { delete state.born[fam][id]; update(); });
       return;
     }
     const step = e.target.closest("[data-step]");
@@ -894,14 +1172,30 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     const gen = e.target.closest(".gen[data-gen]");
     if (gen) { state.openGen = Number(gen.dataset.gen); return update(); }
     const zoneBtn = e.target.closest("[data-zone]");
-    if (zoneBtn) { state.zone = zoneBtn.dataset.zone; save(); return renderPens(plan(state.family)); }
+    if (zoneBtn) { state.zone = zoneBtn.dataset.zone; return softUpdate(); }
     const lvl = e.target.closest("[data-level]");
     if (lvl) { state.level = Number(lvl.dataset.level); return update(); }
     const a = e.target.closest("[data-act]");
     if (!a) return;
     const fam = state.family;
     switch (a.dataset.act) {
-      case "pen-auto": state.penCount = null; save(); renderPens(plan(fam)); break;
+      case "pen-auto": state.penCount = null; save(); renderPens(routineCtx(fam)); break;
+      case "step-done": case "step-undo": {
+        const r = routineOf(fam), g = Number(a.dataset.gen), k = a.dataset.key;
+        r.done[g] = { ...r.done[g] };
+        if (a.dataset.act === "step-done") { r.done[g][k] = true; peek = null; } else { delete r.done[g][k]; peek = { gen: g, key: k }; }
+        softUpdate(); focusCurrentStep(); break;
+      }
+      case "next-gen": routineOf(fam).gen = Number(a.dataset.gen); peek = null; update(); window.scrollTo({ top: 0 }); break;
+      case "new-wave": { const r = routineOf(fam); r.done[a.dataset.gen] = { parents: true }; peek = null; softUpdate(); focusCurrentStep(); break; }
+      case "wiz-done": {
+        if (wizUpTo > 1) DATA[fam].forEach((m) => { if (m.gen >= 2 && m.gen <= wizUpTo) state.born[fam][m.id] = true; });
+        state.onboarded = true; routineOf(fam).pick = null; state.openGen = firstOpenGen(fam); peek = null;
+        update(); setTab("routine"); toast("Ta routine est prête : suis les étapes dans l'ordre.");
+        break;
+      }
+      case "wiz-skip": state.onboarded = true; update(); setTab("registre"); break;
+      case "wiz-open": state.onboarded = false; wizUpTo = 1; update(); setTab("routine"); break;
       case "undo": if (undo) { undo(); undo = null; } $("toast").hidden = true; break;
       case "upto": {
         const g = Number($("upTo").value);
@@ -918,7 +1212,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         update(); break;
       }
       case "export": {
-        const blob = new Blob([JSON.stringify({ app: "registre-gen10", date: new Date().toISOString(), born: state.born, stock: state.stock }, null, 1)], { type: "application/json" });
+        const blob = new Blob([JSON.stringify({ app: "registre-gen10", date: new Date().toISOString(), born: state.born, stock: state.stock, routine: state.routine }, null, 1)], { type: "application/json" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = `registre-gen10-${new Date().toISOString().slice(0, 10)}.json`;
@@ -951,8 +1245,9 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     const t = e.target;
     if (["opti", "takeza", "clone"].includes(t.id)) { state[t.id] = t.checked; return update(); }
     if (t.id === "showStock") { state.showStock = t.checked; if (!t.checked && state.openGen === 1) state.openGen = firstOpenGen(state.family); return update(); }
-    if (t.id === "pens" || t.id === "rate") { state[t.id] = Number(t.value); save(); return renderPens(plan(state.family)); }
-    if (t.id === "penCount") { const v = Math.max(1, Math.floor(Number(t.value) || 1)); state.penCount = v; save(); return renderPens(plan(state.family)); }
+    if (t.id === "wizUpTo") { wizUpTo = Number(t.value); return; }
+    if (t.id === "pens" || t.id === "rate") { state[t.id] = Number(t.value); return softUpdate(); }
+    if (t.id === "penCount") { const v = Math.max(1, Math.floor(Number(t.value) || 1)); state.penCount = v; save(); return renderPens(routineCtx(state.family)); }
     if (t.id === "optiVal") { state.optiVal = Number(t.value); return update(); }
     if (t.id === "genMin") { state.genMin = Number(t.value); if (state.genMax < state.genMin) state.genMax = state.genMin; return update(); }
     if (t.id === "genMax") { state.genMax = Number(t.value); if (state.genMin > state.genMax) state.genMin = state.genMax; return update(); }
