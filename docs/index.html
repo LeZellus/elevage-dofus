@@ -159,6 +159,12 @@ main .wrap { padding-block: var(--s6) var(--s8); }
 .lvtab { display: grid; grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: var(--s2); margin: var(--s2) 0; }
 .lvtab span { display: grid; justify-items: center; padding: var(--s2); border: 1px solid var(--line); border-radius: 10px; }
 
+.lack { margin-top: var(--s3); border-top: 1px solid var(--line); padding-top: var(--s3); }
+.lack summary { cursor: pointer; font-weight: 600; }
+.lack-list { display: grid; gap: var(--s2); margin: var(--s2) 0; }
+.lack-row { display: grid; grid-template-columns: auto 1fr 80px; gap: var(--s2); align-items: center; }
+.lack-row input { width: 80px; }
+
 /* Routine : étapes */
 .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
 .st { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -620,7 +626,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   function tourSplit(n, tours) {
     const out = []; let left = n, prev = 0;
     for (let t = 1; t <= tours && left > 0; t++) {
-      const k = t === 1 ? Math.min(n, Math.ceil(n * paceReuse() - 1e-9)) : t === tours ? left : Math.min(left, Math.ceil(prev / 2));
+      const k = t === 1 ? Math.min(n, Math.max(1, Math.round(n * paceReuse()))) : t === tours ? left : Math.min(left, Math.ceil(prev / 2));
       out.push(k); left -= k; prev = k;
     }
     return out;
@@ -645,10 +651,14 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
   const lc = (x) => x.charAt(0).toLowerCase() + x.slice(1);
   const routineOf = (fam) => state.routine[fam] || (state.routine[fam] = { gen: null, done: {} });
   // Bébés à obtenir dans la génération en cours : ceux du plan, plus ceux déjà notés qui en sont sortis (succès validés).
+  // r.extra : parents manquants déclarés par le joueur, à refaire en plus du plan.
   function birthRows(fam, info, g) {
-    const got = routineOf(fam).got || {};
-    const rows = info.rows.map((x) => ({ m: x.m, target: Math.max(1, Math.ceil(x.r.births - 1e-9)) }));
-    for (const id of Object.keys(got)) if (got[id] && index[fam][id].gen === g && !rows.some((x) => x.m.id === id)) rows.push({ m: index[fam][id], target: 1 });
+    const r = routineOf(fam), got = r.got || {}, extra = r.extra || {};
+    // Une génération de parents doit couvrir ce que le tour 1 des générations suivantes demandera (arrondis compris).
+    const later = info.later || {};
+    const rows = info.rows.map((x) => ({ m: x.m, target: Math.max(1, Math.ceil(x.r.births - 1e-9), later[x.m.id] || 0) + (extra[x.m.id] || 0) }));
+    for (const id of new Set([...Object.keys(got), ...Object.keys(extra)]))
+      if ((got[id] || extra[id]) && index[fam][id].gen === g && !rows.some((x) => x.m.id === id)) rows.push({ m: index[fam][id], target: Math.max(1, (got[id] ? 1 : 0) + (extra[id] || 0)) });
     return rows.map((x) => ({ ...x, got: got[x.m.id] || 0 })).sort((a, b) => a.m.name.localeCompare(b.m.name, "fr"));
   }
   // Réserve après l'objectif : bébés notés + réserve d'avant, moins les parents consommés par le plan de l'objectif.
@@ -658,7 +668,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     const out = [];
     for (const id of ids) {
       if (!index[fam][id]) continue;
-      const before = Number(stock[id]) || 0, used = Math.ceil((sp.demand[id] || 0) - 1e-9);
+      const before = Number(stock[id]) || 0, used = Math.ceil((sp.demand[id] || 0) - 1e-9) + ((routineOf(fam).extra || {})[id] || 0);
       const after = Math.max(0, before + (got[id] || 0) - used);
       if (after !== before) out.push({ m: index[fam][id], before, after });
     }
@@ -673,19 +683,29 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     return g != null ? g : gens[gens.length - 1];
   }
   // Ce que demande une génération du plan : croisements arrondis, découpés en tours, et nouveaux succès.
+  const phaseMemo = new WeakMap();
   function phaseInfo(fam, pl, g) {
+    const memo = phaseMemo.get(pl) || (phaseMemo.set(pl, {}), phaseMemo.get(pl)), mk = `${fam}-${g}-${state.pace}`;
+    if (memo[mk]) return memo[mk];
+    // Parents que le tour 1 des générations suivantes prendra à celle-ci, arrondis compris.
+    const later = {};
+    for (const x of planGens(fam, pl).filter((y) => y > g))
+      for (const c of phaseInfo(fam, pl, x).crosses) for (const id of [c.a.id, c.b.id]) later[id] = (later[id] || 0) + (c.tours[0] || 0);
     const rows = Object.entries(pl.result).map(([id, r]) => ({ m: index[fam][id], r })).filter((x) => x.m.gen === g)
       .sort((a, b) => a.m.name.localeCompare(b.m.name, "fr"));
     const crosses = [];
     for (const { m, r } of rows) m.recipes.forEach(([a, b], i) => {
       if (r.alloc[i] <= 1e-9) return;
-      const n = Math.ceil(r.alloc[i] - 1e-9);
+      // Assez d'accouplements pour couvrir la cible arrondie, pas seulement la moyenne du plan.
+      const k = r.births > 1e-9 ? Math.max(1, (later[m.id] || 0) / r.births) : 1;
+      const n = Math.ceil(r.alloc[i] * k - 1e-9);
       crosses.push({ m, a: index[fam][a], b: index[fam][b], n, tours: tourSplit(n, paceOf().tours) });
     });
-    return {
-      rows, crosses, g, breed: crosses.reduce((s, c) => s + c.n, 0), tours: Math.max(1, ...crosses.map((c) => c.tours.length)),
+    const info = {
+      rows, crosses, g, pl, later, breed: crosses.reduce((s, c) => s + c.n, 0), tours: Math.max(1, ...crosses.map((c) => c.tours.length)),
       births: rows.reduce((s, x) => s + x.r.births, 0), fresh: rows.filter((x) => !state.born[fam][x.m.id]).map((x) => x.m),
     };
+    return (memo[mk] = info);
   }
   // Le tour t d'une génération : ses accouplements et les parents qu'ils consomment, couleur par couleur.
   function tourInfo(info, t) {
@@ -704,8 +724,10 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     for (const x of birthRows(fam, info, info.g)) {
       const miss = x.target - x.got;
       if (miss <= 0) continue;
+      // Croisement du plan, ou première recette si la monture venait de la réserve.
       const c = info.crosses.filter((y) => y.m.id === x.m.id).sort((u, v) => v.n - u.n)[0];
-      if (c) out.push({ m: c.m.id, a: c.a.id, b: c.b.id, n: Math.ceil(miss / p - 1e-9), miss });
+      const [a, b] = c ? [c.a.id, c.b.id] : x.m.recipes[0];
+      out.push({ m: x.m.id, a, b, n: Math.ceil(miss / p - 1e-9), miss });
     }
     return out;
   }
@@ -765,6 +787,15 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     }
   }
 
+  function lackHtml(fam, g, tr) {
+    const bred = Object.entries(tr.parents).filter(([id]) => index[fam][id].gen > 1).sort((a, b) => index[fam][a[0]].name.localeCompare(index[fam][b[0]].name, "fr"));
+    if (!bred.length) return "";
+    return `<details class="lack"><summary>Il me manque des parents</summary>
+      <p class="small">Indique combien tu en as vraiment. Le site te renverra dans la génération en dessous pour refaire seulement ceux qui manquent, puis te ramènera ici.</p>
+      <div class="lack-list">${bred.map(([id, n]) => `<label class="lack-row">${swatch(index[fam][id])}<span>${esc(index[fam][id].name)} <small class="muted">sur ${n}</small></span>
+        <input type="number" min="0" max="${n}" step="1" value="${n}" data-lack="${id}" aria-label="${esc(index[fam][id].name)} : combien en as-tu ?"></label>`).join("")}</div>
+      <button type="button" class="btn sm" data-act="lack" data-gen="${g}">Refaire les parents manquants</button></details>`;
+  }
   function stepBody(key, fam, g, info, tr, pl) {
     const f = FAMILIES[fam];
     const chip = (x) => `<span class="chip">${swatch(x.m)}${esc(x.m.name)} <span class="num">× ${x.n}</span>${x.st ? ` <span class="small muted">(${x.st} en réserve)</span>` : ""}</span>`;
@@ -780,18 +811,18 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         return `<p>Ce rattrapage ne vise que les bébés qui te manquent. Il te faut :</p>
         <div class="chips">${par.map(chip).join("")}</div>
         <p>Pioche dans cet ordre : <b>1.</b> tes bébés ratés de ces couleurs, <b>2.</b> tes clones, <b>3.</b> ta réserve${wild.length ? `, <b>4.</b> des captures pour le reste. ${f.where}` : "."}</p>
-        <p>Prends autant de mâles que de femelles : chaque accouplement demande un mâle et une femelle.</p>`;
+        <p>Prends autant de mâles que de femelles : chaque accouplement demande un mâle et une femelle.</p>${lackHtml(fam, g, tr)}`;
       }
       if (tr.t > 1) return `<p>Sors de l'étable les clones faits à la fin du tour ${tr.t - 1}. Il te faut :</p>
         <div class="chips">${par.map(chip).join("")}</div>
-        <p class="note">Ces nombres couvrent les accouplements de ce tour.${multi ? " " + multi : ""} S'il te manque un clone, un bébé raté de la même couleur peut le remplacer.</p>`;
+        <p class="note">Ces nombres couvrent les accouplements de ce tour.${multi ? " " + multi : ""} S'il te manque un clone, un bébé raté de la même couleur peut le remplacer.</p>${lackHtml(fam, g, tr)}`;
       const wild = par.filter((x) => x.m.gen === 1), bred = par.filter((x) => x.m.gen > 1);
       return `${wild.length ? `<div class="sub"><b>À capturer</b><div class="chips">${wild.map(chip).join("")}</div>
           <p class="note">${f.where} Équipe un filet (métier Éleveur) pour obtenir le sort de capture ; les filets multiplicateurs capturent plusieurs montures par combat.</p></div>` : ""}
         ${bred.length ? `<div class="sub"><b>À sortir de ton étable</b><div class="chips">${bred.map(chip).join("")}</div>
           <p class="note">Ce sont les bébés des générations précédentes de ta routine.</p></div>` : ""}
         <p class="note">Ces nombres couvrent tous les accouplements du tour 1.${multi ? " " + multi : ""}${info.tours > 1 ? ` Les tours suivants se feront avec les clones de ces parents : rien de plus à capturer.` : ""}</p>
-        <p>Prends autant de mâles que de femelles : chaque accouplement demande un mâle et une femelle.</p>`;
+        <p>Prends autant de mâles que de femelles : chaque accouplement demande un mâle et une femelle.</p>${lackHtml(fam, g, tr)}`;
     }
     if (key === "enclos") {
       const count = tr.breed * 2, c = sessionCalc(count);
@@ -850,12 +881,13 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     if (T == null && r.target != null && inRange(r.target) && (open(r.target) || Object.keys(r.auto || {}).length)) T = r.target;
     for (let x = state.genMin; T == null && x <= state.genMax; x++) if (open(x)) T = x;
     if (T == null) return { T: null };
-    if (r.target !== T) { r.target = T; r.gen = null; r.done = {}; r.tour = {}; r.got = {}; r.auto = {}; r.rescue = {}; save(); }
+    if (r.target !== T) { r.target = T; r.gen = null; r.done = {}; r.tour = {}; r.got = {}; r.auto = {}; r.rescue = {}; r.extra = {}; save(); }
     // Plan figé : les succès validés avec les compteurs ne changent pas les quantités en cours de route.
     const bornThen = { ...state.born[fam] };
     for (const id of Object.keys(r.auto || {})) delete bornThen[id];
     const sp = plan(fam, { ...state, genMin: T, genMax: T, born: { ...state.born, [fam]: bornThen } });
-    const gens = planGens(fam, sp), g = currentGen(fam, gens);
+    const gens = [...new Set([...planGens(fam, sp), ...Object.keys(r.extra || {}).filter((id) => r.extra[id] > 0).map((id) => index[fam][id].gen)])].sort((a, b) => a - b);
+    const g = currentGen(fam, gens);
     const info = { ...phaseInfo(fam, sp, g), T };
     const want = Math.max(1, (r.tour || {})[g] || 1), rs = ((r.rescue || {})[g] || []).find((x) => x.t === want);
     return { T, sp, gens, g, info, tr: rs ? rescueTour(fam, rs) : tourInfo(info, Math.min(want, info.tours)) };
@@ -900,6 +932,8 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
     const finished = cur < 0 && trv.last;
     const open = peek && peek.gen === g ? peek.key : cur >= 0 && !finished ? STEPS[cur][0] : null;
     const gi = gens.indexOf(g), next = gens[gi + 1];
+    const lackNote = Object.keys(routineOf(fam).extra || {}).some((id) => index[fam][id].gen === g && routineOf(fam).extra[id] > 0) && !allBorn
+      ? `<div class="tip"><span class="ic">!</span><p>Tu refais ici les parents qui te manquaient. Dès qu'ils sont nés, le site te ramène à la génération suivante.</p></div>` : "";
     const names = goal.slice(0, 3).map((m) => esc(m.name)).join(", ") + (goal.length > 3 ? ` et ${goal.length - 3} autre${goal.length > 4 ? "s" : ""}` : "");
 
     const path = `<ol class="path" aria-label="Chemin vers l'objectif">${gens.map((x, i) => `<li class="${i < gi ? "done" : i === gi ? "now" : ""}">
@@ -962,7 +996,7 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
           <button type="button" class="btn primary" data-act="new-wave" data-gen="${g}">Lancer le rattrapage</button></div></div>`;
         })();
 
-    el.innerHTML = head + now + steps + end;
+    el.innerHTML = head + now + lackNote + steps + end;
   }
 
   /* ---------- 1. Registre ---------- */
@@ -1084,7 +1118,11 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
       <div class="stat"><b>${pl.newOnes}</b><span>${plural(pl.newOnes, "naissance")} pour les succès</span></div>
       <div class="stat"><b>≈ ${up(pl.totalBreed)}</b><span>accouplements ${state.level === "auto" ? `de ${fmt1.format(pl.pAt(2) * 100)} à ${fmt1.format(pl.pAt(10) * 100)} %` : `à ${fmt1.format(pl.p * 100)} %`}</span></div>
       <div class="stat"><b>${fmt0.format(pl.totalCaptures)}</b><span>captures de génération 1</span></div></div>`;
-    if (state.level !== "auto" && pl.p < 1) {
+    const autoPl = state.level !== "auto" ? plan(fam, { ...state, level: "auto" }) : null;
+    if (autoPl && pl.totalCaptures > 2 * autoPl.totalCaptures) {
+      html += `<div class="tip"><span class="ic">!</span><p><b>Ton niveau fixe (${state.level}) multiplie le travail.</b> À ${fmt1.format(pl.p * 100)} % de réussite sur toutes les générations, chaque génération demande plusieurs fois plus de parents que la précédente : ≈ <b class="num">${fmt0.format(pl.totalCaptures)}</b> captures et ${up(pl.totalBreed)} accouplements. Avec le niveau le plus rentable, qui monte tes parents seulement là où ça vaut le coup : ≈ <b class="num">${fmt0.format(autoPl.totalCaptures)}</b> captures et ${up(autoPl.totalBreed)} accouplements.</p></div>
+        <div class="row"><button type="button" class="btn primary" data-level="auto">Passer au niveau le plus rentable</button></div>`;
+    } else if (state.level !== "auto" && pl.p < 1) {
       const best = plan(fam, { ...state, level: 200, opti: true, optiVal: 20 });
       const gain = 1 - best.totalBreed / pl.totalBreed;
       if (gain > 0.05) html += `<div class="tip"><span class="ic">!</span><p>Avec des parents niveau 200 et une Optimakina (100 % de réussite), il ne faudrait qu'environ <b class="num">${up(best.totalBreed)}</b> accouplements et <b class="num">${fmt0.format(best.totalCaptures)}</b> captures : <b>${Math.round(gain * 100)} % de travail en moins</b>. Monter tes parents vaut surtout le coup pour les générations 8 à 10. <a href="#conditions">Changer mes réglages</a></p></div>`;
@@ -1473,6 +1511,28 @@ footer .wrap { padding-block: var(--s5) var(--s6); color: var(--muted); font-siz
         break;
       }
       case "next-gen": routineOf(fam).gen = Number(a.dataset.gen); peek = null; update(); window.scrollTo({ top: 0 }); break;
+      case "lack": {
+        const r = routineOf(fam), ctx = routineCtx(fam), miss = {};
+        document.querySelectorAll("#routine [data-lack]").forEach((i) => {
+          const id = i.dataset.lack, n = Math.max(0, Math.round((ctx.tr.parents[id] || 0) - (Number(i.value) || 0)));
+          if (n > 0) miss[id] = n;
+        });
+        const ids = Object.keys(miss);
+        if (!ids.length) { toast("Tu as tous les parents qu'il faut : continue."); break; }
+        const snap = JSON.parse(JSON.stringify(r));
+        r.extra = { ...r.extra };
+        for (const id of ids) r.extra[id] = (r.extra[id] || 0) + miss[id];
+        const gl = Math.min(...ids.map((id) => index[fam][id].gen));
+        r.gen = gl;
+        const c2 = routineCtx(fam), list = ((r.rescue = r.rescue || {})[gl] = r.rescue[gl] || []);
+        const t = Math.max(c2.info.tours, (r.tour || {})[gl] || 1, ...list.map((x) => x.t)) + 1;
+        list.push({ t, k: list.length + 1, crosses: rescueCrosses(fam, c2.info, c2.sp.pAt(gl)) });
+        r.tour = { ...r.tour, [gl]: t }; r.done[`${gl}-${t}`] = {}; peek = null;
+        update(); window.scrollTo({ top: 0 });
+        const tot = ids.reduce((x, id) => x + miss[id], 0);
+        toast(`Retour en génération ${gl} : ${tot} ${plural(tot, "parent")} à refaire, puis retour à la génération ${ctx.g}.`, () => { state.routine[fam] = snap; update(); });
+        break;
+      }
       case "new-wave": {
         const r = routineOf(fam), ctx = routineCtx(fam), g = ctx.g, list = ((r.rescue = r.rescue || {})[g] = r.rescue[g] || []);
         const t = Math.max(ctx.info.tours, ctx.tr.t) + 1;
